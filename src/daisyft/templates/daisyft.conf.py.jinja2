@@ -1,0 +1,25 @@
+{# Configuration file template for daisyft projects #}
+from pathlib import Path
+from datetime import datetime
+from daisyft import ProjectConfig, BinaryMetadata
+
+config = ProjectConfig(
+    style="{{ style }}",
+    app_path=Path("{{ app_path }}"),
+    paths={
+        {% for key, path in paths.items() %}
+        "{{ key }}": Path("{{ path }}"),
+        {% endfor %}
+    },
+    {% if binary_metadata %}
+    binary_metadata=BinaryMetadata(
+        style="{{ binary_metadata.style }}",
+        version="{{ binary_metadata.version }}",
+        downloaded_at=datetime.fromisoformat("{{ binary_metadata.downloaded_at.isoformat() }}"),
+        sha="{{ binary_metadata.sha }}",
+        release_id={{ binary_metadata.release_id }}
+    )
+    {% else %}
+    binary_metadata=None
+    {% endif %}
+) 

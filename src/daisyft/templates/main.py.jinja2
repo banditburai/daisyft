@@ -1,0 +1,31 @@
+# ============================================================================
+#  FastHTML + TailwindCSS{% if style == "daisy" %} + DaisyUI{% endif %} Simple Template
+# ============================================================================
+from fasthtml.common import *
+
+styles = Link(rel="stylesheet", href="/{{ paths.css.parent }}/output.css", type="text/css")
+
+app, rt = fast_app(
+    pico=False,
+    surreal=False,
+    live={{ live }},
+    hdrs=(styles,),
+    htmlkw=dict(lang="en", dir="ltr"{% if style == "daisy" %}, data_theme="{{ theme }}"{% endif %}),
+    bodykw=dict(cls="min-h-screen {% if style == 'daisy' %}bg-base-100{% else %}bg-gray-100 dark:bg-gray-900{% endif %}")
+)
+
+@rt("/")
+def get():
+    return Div(
+        Div(
+            H1("Nothing to see here yet...", 
+               cls="{% if style == 'daisy' %}text-2xl font-bold mb-2{% else %}text-2xl font-bold mb-2 text-gray-900 dark:text-white{% endif %}"),
+            P("But your FastHTML app is running!", 
+              cls="{% if style == 'daisy' %}text-base text-base-content/60{% else %}text-base text-gray-600 dark:text-gray-400{% endif %}"),
+            cls="text-center"
+        ),
+        cls="min-h-screen flex items-center justify-center"
+    )
+
+if __name__ == "__main__":      
+    serve(port={{ port }})

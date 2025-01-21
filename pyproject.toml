@@ -1,0 +1,39 @@
+[project]
+name = "daisyft"
+version = "0.1.0"
+description = "DaisyUI/Tailwind/Motion components for FastHTML projects"
+readme = "README.md"
+authors = [
+    { name = "firefly", email = "promptsiren@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "jinja2>=3.1.5",
+    "questionary>=2.1.0",
+    "requests>=2.32.3",
+    "rich>=13.9.4",
+    "typer>=0.15.1",
+]
+
+[tool.uv]
+dev-dependencies = [
+     "pytest>=8.3.4",
+    "responses>=0.25.6",
+    ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["src/daisyft"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/daisyft"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[project.scripts]
+daisyft = "daisyft.cli.main:app"
