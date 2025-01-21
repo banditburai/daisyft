@@ -3,7 +3,7 @@ from rich.console import Console
 from pathlib import Path
 from typing import Optional, List
 from daisyft.cli import init, add
-from . import build, dev, run
+from . import build, dev, run, sync
 from .registry import commands as registry_commands
 
 app = typer.Typer(
@@ -19,6 +19,7 @@ app.command()(add.add)
 app.command()(build.build)
 app.command()(dev.dev)
 app.command()(run.run)
+app.command()(sync.sync)
 
 # Add registry commands as a group
 app.add_typer(registry_commands.registry_app, name="registry")

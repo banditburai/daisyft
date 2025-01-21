@@ -3,13 +3,24 @@ from pathlib import Path
 from datetime import datetime
 from daisyft import ProjectConfig, BinaryMetadata
 
+# Note: After changing settings like port/host/live, run 'daisyft sync' 
+# to update your main.py with the new values
+
 config = ProjectConfig(
     style="{{ style }}",
+    theme="{{ theme }}",
     app_path=Path("{{ app_path }}"),
+    host="{{ host }}",
+    port={{ port }},
+    live={{ live }},
+    include_icons={{ include_icons }},
     paths={
-        {% for key, path in paths.items() %}
-        "{{ key }}": Path("{{ path }}"),
-        {% endfor %}
+        "components": Path("{{ paths.components }}"),
+        "ui": Path("{{ paths.ui }}"),
+        "static": Path("{{ paths.static }}"),
+        "css": Path("{{ paths.css }}"),
+        "js": Path("{{ paths.js }}"),
+        "icons": Path("{{ paths.icons }}"),
     },
     {% if binary_metadata %}
     binary_metadata=BinaryMetadata(

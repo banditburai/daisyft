@@ -3,7 +3,7 @@
 # ============================================================================
 from fasthtml.common import *
 
-styles = Link(rel="stylesheet", href="/{{ paths.css.parent }}/output.css", type="text/css")
+styles = Link(rel="stylesheet", href="/{{ paths.css }}/output.css", type="text/css")
 
 app, rt = fast_app(
     pico=False,
