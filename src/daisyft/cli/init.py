@@ -236,7 +236,8 @@ def init(
             render_template(
                 "input.css.jinja2",
                 project_path / config.paths["css"] / "input.css",
-                style=config.style
+                style=config.style,
+                components={}  # Add empty components dict for initial setup
             )
             
             # Install base components
