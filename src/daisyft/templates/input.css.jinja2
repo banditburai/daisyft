@@ -1,25 +1,11 @@
 {# Modern Tailwind setup with optional DaisyUI #}
 @import "tailwindcss";
-
 {% if style == "daisy" %}
 @plugin "daisyui";
 {% endif %}
 
-{# Base theme variables #}
-@layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 222.2 84% 4.9%;
-        
-        --card: 0 0% 100%;
-        --card-foreground: 222.2 84% 4.9%;
-    }
-
-    .dark {
-        --background: 222.2 84% 4.9%;
-        --foreground: 0 0% 100%;
-        
-        --card: 222.2 84% 4.9%;
-        --card-foreground: 0 0% 100%;
-    }
-} 
+@layer components {
+{% for component, config in components.items() %}
+  {% include "components/" + component + ".css.jinja2" ignore missing %}
+{% endfor %}
+}

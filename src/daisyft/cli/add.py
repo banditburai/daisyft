@@ -4,9 +4,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 import questionary
 from pathlib import Path
 from typing import Optional, Type
-from daisyft.registry.decorators import Registry, RegistryType, RegistryBase
-from daisyft.utils.config import ProjectConfig
-from daisyft.utils.templates import render_template
+from ..registry.decorators import Registry, RegistryType, RegistryBase
+from ..utils.config import ProjectConfig
 
 console = Console()
 
@@ -66,28 +65,37 @@ def add(
         if component_class._registry_meta.dependencies:
             progress.update(task, description="Checking dependencies...")
             for dep in component_class._registry_meta.dependencies:
-                dep_class = Registry.get_component(dep)
-                if dep_class and not (config.paths["ui"] / f"{dep}.py").exists():
-                    # Install dependency component
-                    install_with_confirmation(dep_class, config, force)
+                if not config.has_component(dep):
+                    dep_class = Registry.get_component(dep)
+                    if dep_class:
+                        install_with_confirmation(dep_class, config, force)
         
-        progress.update(task, advance=50)
+        progress.update(task, advance=30)
         
-        # Install the component
-        install_with_confirmation(component_class, config, force)
-        progress.update(task, advance=50)
+        # Install the component files
+        progress.update(task, description="Installing component files...")
+        if install_with_confirmation(component_class, config, force):
+            # Track the component in config
+            component_path = config.paths["ui"] / f"{component}.py"
+            config.add_component(
+                name=component,
+                type=component_class._registry_meta.type,
+                path=component_path
+            )
+            
+            # Update input.css through sync command
+            progress.update(task, description="Updating CSS...")
+            from .sync import sync
+            sync(force=force)
+            
+        progress.update(task, advance=70)
 
     console.print(f"[green]✓[/green] Added {component} successfully!")
 
-def install_with_confirmation(component_class: Type[RegistryBase], config: ProjectConfig, force: bool) -> None:
-    """Handle component installation with user confirmation"""
-    if not component_class.install(config, force):
-        if typer.confirm("Files already exist. Overwrite?"):
-            component_class.install(config, force=True)
-
-def update_tailwind_config(config: ProjectConfig, tailwind_config) -> None:
-    """Update Tailwind configuration with component-specific settings"""
-    input_css = config.paths["css"] / "input.css"
-    if input_css.exists():
-        # TODO: Implement Tailwind config merging
-        pass 
+def install_with_confirmation(component_class: Type[RegistryBase], config: ProjectConfig, force: bool) -> bool:
+    """Handle component installation with user confirmation. Returns True if installed."""
+    if not force and config.has_component(component_class._registry_meta.name):
+        if not typer.confirm(f"{component_class._registry_meta.name} is already installed. Overwrite?"):
+            return False
+    
+    return component_class.install(config, force=True) 
