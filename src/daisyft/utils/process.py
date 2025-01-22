@@ -52,7 +52,7 @@ class ProcessManager:
                     
                     # Wait briefly for graceful shutdown
                     try:
-                        process.wait(timeout=1)
+                        process.wait(timeout=0.5)
                     except subprocess.TimeoutExpired:
                         # Force kill if taking too long
                         if os.name != 'nt':
@@ -67,4 +67,4 @@ class ProcessManager:
         self.processes.clear()
         
         # Brief pause to ensure all processes are cleaned up
-        time.sleep(0.2) 
+        # time.sleep(0.2) 
