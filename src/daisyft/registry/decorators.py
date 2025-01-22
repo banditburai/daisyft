@@ -11,7 +11,6 @@ from ..utils.config import ProjectConfig
 from ..utils.templates import render_template
 
 class RegistryType(str, Enum):
-    # Core types
     COMPONENT = "component"
     BLOCK = "block"
     UI = "ui"
@@ -61,28 +60,15 @@ class RegistryFile:
 
 @dataclass
 class RegistryMeta:
+    """Metadata for registry items"""
     name: str
     type: RegistryType
     description: Optional[str] = None
-    title: Optional[str] = None
     author: Optional[str] = None
     dependencies: List[str] = field(default_factory=list)
-    dev_dependencies: List[str] = field(default_factory=list)
-    registry_dependencies: List[str] = field(default_factory=list)
-    categories: List[str] = field(default_factory=list)
     files: List[str] = field(default_factory=list)
+    categories: List[str] = field(default_factory=list)
     tailwind: Optional[dict] = None
-    css_vars: Optional[CSSVars] = None
-    meta: dict = None
-    docs: Optional[str] = None
-
-    def __post_init__(self):
-        self.dependencies = self.dependencies or []
-        self.dev_dependencies = self.dev_dependencies or []
-        self.registry_dependencies = self.registry_dependencies or []
-        self.categories = self.categories or []
-        self.files = self.files or []
-        self.meta = self.meta or {}
 
 class RegistryBase:
     """Base class for registry components"""
@@ -106,17 +92,10 @@ class RegistryBase:
         target_dir.mkdir(parents=True, exist_ok=True)
 
         files_written = False
-        # Install dependencies first
-        for dep in meta.dependencies:
-            dep_class = Registry.get_component(dep)
-            if dep_class and not (config.paths["ui"] / f"{dep}.py").exists():
-                dep_class.install(config, force)
-
-        # Install component files
         for file in meta.files:
             target_path = target_dir / file
             if target_path.exists() and not force:
-                return False  # Signal that we need user confirmation
+                return False
             
             render_template(
                 f"components/{file}.jinja2",
@@ -127,42 +106,46 @@ class RegistryBase:
             )
             files_written = True
 
-        # Track the component installation with simplified metadata
-        if files_written:
-            config.add_component(
-                name=meta.name,
-                type=meta.type.value,
-                path=target_dir / meta.files[0] if meta.files else target_dir
-            )
-
         return files_written
 
 T = TypeVar('T', bound=RegistryBase)
 
 class Registry:
-    _components: ClassVar[Dict[str, Type[RegistryBase]]] = {}
-    _blocks: ClassVar[Dict[str, Type[RegistryBase]]] = {}
+    """Component and block registry"""
+    _components: Dict[str, Type[RegistryBase]] = {}
+    _blocks: Dict[str, Type[RegistryBase]] = {}
 
     @classmethod
-    def register(cls, type: RegistryType, *, name: Optional[str] = None, **kwargs):
-        def decorator(component_class: Type[RegistryBase]) -> Type[RegistryBase]:
-            registry_name = name or component_class.__name__.lower()
-            # Only use docstring if description not provided in kwargs
-            if 'description' not in kwargs and component_class.__doc__:
-                kwargs['description'] = component_class.__doc__
+    def register(cls, type: RegistryType, **kwargs):
+        """Register a component or block"""
+        def decorator(component_class: Type[T]) -> Type[T]:
+            name = kwargs.get('name', component_class.__name__.lower())
             meta = RegistryMeta(
-                name=registry_name,
+                name=name,
                 type=type,
-                **kwargs
+                description=kwargs.get('description') or component_class.__doc__,
+                author=kwargs.get('author'),
+                dependencies=kwargs.get('dependencies', []),
+                files=kwargs.get('files', []),
+                categories=kwargs.get('categories', []),
+                tailwind=kwargs.get('tailwind')
             )
             component_class._registry_meta = meta
             
-            if type == RegistryType.BLOCK:
-                cls._blocks[registry_name] = component_class
-            else:
-                cls._components[registry_name] = component_class
+            registry = cls._blocks if type == RegistryType.BLOCK else cls._components
+            registry[name] = component_class
             return component_class
         return decorator
+
+    @classmethod
+    def component(cls, **kwargs):
+        """Register a component"""
+        return cls.register(type=RegistryType.COMPONENT, **kwargs)
+
+    @classmethod
+    def block(cls, **kwargs):
+        """Register a block"""
+        return cls.register(type=RegistryType.BLOCK, **kwargs)
 
     @classmethod
     def get_any(cls, name: str) -> Optional[Type[RegistryBase]]:
@@ -186,26 +169,10 @@ class Registry:
         ]
 
     @classmethod
-    def component(cls, **kwargs) -> Callable[[Type[T]], Type[T]]:
-        return cls.register(type=RegistryType.COMPONENT, **kwargs)
-        
-    @classmethod
-    def block(cls, **kwargs) -> Callable[[Type[T]], Type[T]]:
-        return cls.register(type=RegistryType.BLOCK, **kwargs)
-
-    @classmethod
-    def get_component(cls, name: str) -> Optional[Type[RegistryBase]]:
-        return cls._components.get(name)
-
-    @classmethod
-    def get_block(cls, name: str) -> Optional[Type[RegistryBase]]:
-        return cls._blocks.get(name)
-
-    @classmethod
     def get_by_category(cls, category: str) -> List[Type[RegistryBase]]:
+        """Get all components and blocks in a category"""
         return [
             item for items in [cls._components.values(), cls._blocks.values()]
             for item in items 
-            if hasattr(item, '_registry_meta') 
-            and category in item._registry_meta.categories
+            if category in item._registry_meta.categories
         ]

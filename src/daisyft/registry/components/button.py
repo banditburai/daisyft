@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Union, List
 from fasthtml.common import *
-from ..decorators import Registry, RegistryType
+from ..decorators import Registry, RegistryBase
 
 @Registry.component(
     description="A versatile button component with multiple variants and states",
@@ -49,7 +49,7 @@ from ..decorators import Registry, RegistryType
     }
 )
 @dataclass
-class Button:
+class Button(RegistryBase):
     """A versatile button component with multiple variants and states."""
     content: Union[str, List, None] = None
     variant: str = "default"
