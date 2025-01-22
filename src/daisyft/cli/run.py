@@ -37,13 +37,17 @@ def run(
         console.print(f"[red]Error:[/red] Failed to build CSS: {e}")
         raise typer.Exit(1)
     
-    # Start FastHTML server
+    # Start FastHTML server with process group
+    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
+    preexec_fn = os.setsid if os.name != 'nt' else None
+    
     server_process = subprocess.Popen([
         sys.executable,
         str(config.app_path),
         "--host", host,
         "--port", str(port)
-    ], preexec_fn=os.setsid if os.name != 'nt' else None)
+    ], preexec_fn=preexec_fn, creationflags=creationflags)
+    
     pm.add_process(server_process)
     
     # Brief pause to check if server started successfully
@@ -52,9 +56,7 @@ def run(
         console.print(f"\n[green]Server running at[/green] http://{host}:{port}")
     
     try:
-        # Wait for processes
         server_process.wait()
     except KeyboardInterrupt:
-        pass  # Let the ProcessManager handle cleanup
-    finally:
-        pm.cleanup() 
+        pm.cleanup()
+        sys.exit(0) 

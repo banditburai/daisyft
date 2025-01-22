@@ -1,8 +1,9 @@
 import typer
 from pathlib import Path
 import subprocess
-import time
 import os
+import sys
+import time
 from rich.console import Console
 from ..utils.config import ProjectConfig
 from ..utils.process import ProcessManager
@@ -27,26 +28,29 @@ def dev(
     
     pm = ProcessManager()
     
-    # Start Tailwind CSS watcher
+    # Start Tailwind CSS watcher with process group
+    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
+    preexec_fn = os.setsid if os.name != 'nt' else None
+    
     css_process = subprocess.Popen([
         "./tailwindcss",
         "-i", str(input_css_path),
         "-o", str(output_css_path),
         "--watch"
-    ], preexec_fn=os.setsid if os.name != 'nt' else None)
+    ], preexec_fn=preexec_fn, creationflags=creationflags)
     pm.add_process(css_process)
     
     # Brief pause to let Tailwind start
     time.sleep(0.5)
     
-    # Start FastHTML dev server
+    # Start FastHTML dev server with process group
     server_process = subprocess.Popen([
         "uvicorn",
         f"{config.app_path.stem}:app",
         "--host", host,
         "--port", str(port),
         "--reload"
-    ], preexec_fn=os.setsid if os.name != 'nt' else None)
+    ], preexec_fn=preexec_fn, creationflags=creationflags)
     pm.add_process(server_process)
     
     # Brief pause to check if server started successfully
@@ -55,9 +59,7 @@ def dev(
         console.print(f"\n[green]Server running at[/green] http://{host}:{port}")
     
     try:
-        # Wait for processes
         server_process.wait()
     except KeyboardInterrupt:
-        pass
-    finally:
-        pm.cleanup() 
+        pm.cleanup()
+        sys.exit(0) 
