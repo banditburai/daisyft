@@ -1,7 +1,7 @@
 import typer
 from pathlib import Path
 import subprocess
-import platform
+import os
 import sys
 import time
 from rich.console import Console
@@ -43,7 +43,7 @@ def run(
         str(config.app_path),
         "--host", host,
         "--port", str(port)
-    ])
+    ], preexec_fn=os.setsid if os.name != 'nt' else None)
     pm.add_process(server_process)
     
     # Brief pause to check if server started successfully
@@ -52,8 +52,9 @@ def run(
         console.print(f"\n[green]Server running at[/green] http://{host}:{port}")
     
     try:
+        # Wait for processes
         server_process.wait()
     except KeyboardInterrupt:
-        pass
+        pass  # Let the ProcessManager handle cleanup
     finally:
         pm.cleanup() 

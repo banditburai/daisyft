@@ -2,6 +2,7 @@ import typer
 from pathlib import Path
 import subprocess
 import time
+import os
 from rich.console import Console
 from ..utils.config import ProjectConfig
 from ..utils.process import ProcessManager
@@ -32,7 +33,7 @@ def dev(
         "-i", str(input_css_path),
         "-o", str(output_css_path),
         "--watch"
-    ])
+    ], preexec_fn=os.setsid if os.name != 'nt' else None)
     pm.add_process(css_process)
     
     # Brief pause to let Tailwind start
@@ -45,7 +46,7 @@ def dev(
         "--host", host,
         "--port", str(port),
         "--reload"
-    ])
+    ], preexec_fn=os.setsid if os.name != 'nt' else None)
     pm.add_process(server_process)
     
     # Brief pause to check if server started successfully
