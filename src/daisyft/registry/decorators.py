@@ -153,6 +153,16 @@ class Registry:
         return cls._components.get(name) or cls._blocks.get(name)
 
     @classmethod
+    def get_component(cls, name: str) -> Optional[Type[RegistryBase]]:
+        """Get component by name"""
+        return cls._components.get(name)
+
+    @classmethod
+    def get_block(cls, name: str) -> Optional[Type[RegistryBase]]:
+        """Get block by name"""
+        return cls._blocks.get(name)
+
+    @classmethod
     def get_available_components(cls) -> List[str]:
         """Get list of available component descriptions"""
         return [
