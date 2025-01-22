@@ -27,7 +27,8 @@ class ProcessManager:
         self.done = True
         console.print("\n[yellow]Shutting down...[/yellow]")
         self.cleanup()
-        # Force exit after cleanup
+        # Print a completion message before exiting
+        console.print("[green]✓[/green] Done")
         os._exit(0)
     
     def add_process(self, process):
