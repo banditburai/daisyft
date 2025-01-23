@@ -16,21 +16,7 @@ import inspect
         "from dataclasses import dataclass",
         "from typing import Optional, Union, List, Any",
         "from fasthtml.common import *"
-    ],
-    # Add CSS definitions for custom variants
-    tailwind={
-        "components": {
-            # Custom button variants
-            "btn-custom": """
-                @apply btn bg-purple-500 text-white hover:bg-purple-600;
-                /* Custom styles for the custom variant */
-            """,
-            "btn-gradient": """
-                @apply btn bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0;
-                /* Gradient button style */
-            """
-        }
-    }
+    ]
 )
 @dataclass
 class Button(RegistryBase):
@@ -110,21 +96,27 @@ class Button(RegistryBase):
         - Icons are automatically sized and positioned
     """
     content: Union[str, List, None] = None
-    variant: str = "default"
+    variant: str = "default"  # Now supports custom variants
     size: str = "md"
-    style: Optional[str] = None  # outline, ghost, etc.
-    modifier: Optional[str] = None  # wide, block, square, circle
+    style: Optional[str] = None
+    modifier: Optional[str] = None
     disabled: bool = False
     loading: bool = False
-    cls: str = ""  # Additional classes
+    cls: str = ""
+
+    # Define custom variants
+    CUSTOM_VARIANTS = {
+        "custom": "bg-purple-500 text-white hover:bg-purple-600",
+        "gradient": "bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0",
+    }
 
     def get_classes(self) -> str:
         """Combine all classes based on props"""
         classes = [
             # Base button class
             "btn",
-            # Variant (color)
-            f"btn-{self.variant}" if self.variant != "default" else "",
+            # Handle both built-in and custom variants
+            self._get_variant_classes(),
             # Size
             f"btn-{self.size}" if self.size != "md" else "",
             # Style (outline, ghost, etc)
@@ -138,6 +130,12 @@ class Button(RegistryBase):
             self.cls
         ]
         return " ".join(filter(None, classes))
+
+    def _get_variant_classes(self) -> str:
+        """Get variant-specific classes"""
+        if self.variant in self.CUSTOM_VARIANTS:
+            return self.CUSTOM_VARIANTS[self.variant]
+        return f"btn-{self.variant}" if self.variant != "default" else ""
 
     def __ft__(self) -> Any:
         """Render the button component."""

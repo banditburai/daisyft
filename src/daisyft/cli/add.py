@@ -7,12 +7,8 @@ from typing import Optional, Type
 from ..registry.base import RegistryBase
 from ..registry.decorators import Registry
 from ..utils.config import ProjectConfig
-from ..utils.install import install_component, add_component_css
-import logging
 
 console = Console()
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 def add(
     component: Optional[str] = typer.Argument(None, help="Component or block to add"),
@@ -32,26 +28,21 @@ def add(
     config = ProjectConfig.load()
     
     if not component:
-        # Interactive component selection
-        logger.debug("Starting interactive selection")
+        # Interactive component selection        
         component_type = questionary.select(
             "What would you like to add?",
             choices=["UI Component", "Block"]
-        ).ask()
-        logger.debug(f"Selected type: {component_type}")
+        ).ask()        
 
         if component_type == "UI Component":
             choices = Registry.get_available_components()
         else:
-            choices = Registry.get_available_blocks()
-        
-        logger.debug(f"Available choices: {choices}")
+            choices = Registry.get_available_blocks()            
 
         selected = questionary.select(
             f"Select a {'component' if component_type == 'UI Component' else 'block'}:",
             choices=choices
-        ).ask()
-        logger.debug(f"Raw selection: {selected}, type: {type(selected)}")
+        ).ask()        
         
         if not selected:
             console.print("[red]No component selected[/red]")
@@ -59,18 +50,12 @@ def add(
             
         # Extract just the component name from the selection string
         component = str(selected).split(":", 1)[0].strip().lower()
-        logger.debug(f"Extracted component name: {component}")
 
     # Get component from registry
     component_class = Registry.get_any(component)
     if not component_class:
         console.print(f"[red]Error:[/red] Component '{component}' not found")
         raise typer.Exit(1)
-
-    logger.debug(f"Component class: {component_class}")
-    logger.debug(f"Meta: {component_class._registry_meta}")
-    logger.debug(f"Target directory type: {type(component_class.get_install_path(config))}")
-    logger.debug(f"Target directory: {component_class.get_install_path(config)}")
 
     with Progress(
         SpinnerColumn(),
@@ -102,14 +87,7 @@ def add(
                     path=component_path
                 )
                 
-                # Add custom CSS if defined
-                if component_class._registry_meta.tailwind:
-                    progress.update(task, description="Updating CSS...")
-                    css_file = Path(config.paths["css"]) / "input.css"
-                    logger.debug(f"CSS file path: {css_file}")
-                    add_component_css(css_file, component_class._registry_meta.tailwind)
-                
-                # Update input.css through sync command
+                # Update project through sync command
                 progress.update(task, description="Syncing project...")
                 from .sync import sync_with_config
                 sync_with_config(config, force)
@@ -119,7 +97,6 @@ def add(
             console.print(f"[green]✓[/green] Added {component} successfully!")
             
         except Exception as e:
-            logger.error(f"Error during installation: {e}", exc_info=True)
             console.print(f"[red]Error:[/red] {str(e)}")
             raise typer.Exit(1)
 
