@@ -15,35 +15,34 @@ def install_component(
     target_dir = Path(component_class.get_install_path(config))
     target_dir.mkdir(parents=True, exist_ok=True)
     
-    # Build the output file content
     clean_source = []
     
-    # Add detailed docs if verbose mode is on
-    if verbose and meta.detailed_docs:
+    # Explicitly get docs from registry meta
+    if verbose and hasattr(meta, 'detailed_docs') and meta.detailed_docs:
+        print(f"Adding docs: {meta.detailed_docs[:50]}...")  # Debug print
         clean_source.append(meta.detailed_docs)
         clean_source.append("")  # Empty line after docs
     
     # Add imports
-    clean_source.extend(meta.imports)
-    clean_source.append("")  # Empty line after imports
+    if hasattr(meta, 'imports'):
+        clean_source.extend(meta.imports)
+        clean_source.append("")  # Empty line after imports
     
-    # Get source code and split into lines
+    # Get the class source
     source = inspect.getsource(component_class)
     lines = source.split('\n')
     
-    # Find the actual class definition (skip decorators and DOCS)
-    class_start = None
+    # Find the class definition
     for i, line in enumerate(lines):
         if line.startswith('class '):
-            class_start = i
+            # Remove RegistryBase inheritance
+            class_def = line.replace('(RegistryBase)', '')
+            clean_source.append(class_def)
+            # Add everything after the class definition
+            clean_source.extend(lines[i+1:])
             break
-    
-    if class_start is not None:
-        # Get class content, removing RegistryBase inheritance
-        class_content = lines[class_start:]
-        class_content[0] = class_content[0].replace('(RegistryBase)', '')
-        clean_source.extend(class_content)
     
     # Write the file
     target_path = target_dir / f"{meta.name}.py"
+    print(f"Writing to {target_path} with verbose={verbose}")  # Debug print
     target_path.write_text('\n'.join(clean_source)) 
