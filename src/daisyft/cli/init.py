@@ -247,13 +247,7 @@ def init(
                 style=config.style,
                 components={}  # Add empty components dict for initial setup
             )
-            
-            # Install base components
-            if template == "basic":
-                button = Registry.get_component("button")
-                if button:
-                    button.install(config, force)
-            
+                        
             # Generate main app
             render_template(
                 "main.py.jinja2",

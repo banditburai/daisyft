@@ -15,42 +15,35 @@ def install_component(
     target_dir = Path(component_class.get_install_path(config))
     target_dir.mkdir(parents=True, exist_ok=True)
     
-    # Get source code
-    source = inspect.getsource(component_class)
-    
-    # Process source code
-    class_content = []
-    in_class = False
+    # Build the output file content
     clean_source = []
     
     # Add detailed docs if verbose mode is on
     if verbose and meta.detailed_docs:
-        clean_source.append(meta.detailed_docs + "\n")
+        clean_source.append(meta.detailed_docs)
+        clean_source.append("")  # Empty line after docs
     
     # Add imports
     clean_source.extend(meta.imports)
     clean_source.append("")  # Empty line after imports
     
-    # Process the class
-    for line in source.split('\n'):
-        # Skip registry decorator and imports we don't need
-        if any(x in line for x in ['@Registry', 'from ..base', 'from ..decorators', 'from daisyft', 'DOCS =']):
-            continue
-            
-        # Start collecting when we hit the class definition
-        if line.startswith('class '):
-            in_class = True
-            # Remove RegistryBase from class definition
-            line = line.replace('(RegistryBase)', '')
-            class_content.append(line)
-            continue
-            
-        if in_class:
-            class_content.append(line)
+    # Get source code and split into lines
+    source = inspect.getsource(component_class)
+    lines = source.split('\n')
     
-    # Add class content
-    clean_source.extend(class_content)
+    # Find the actual class definition (skip decorators and DOCS)
+    class_start = None
+    for i, line in enumerate(lines):
+        if line.startswith('class '):
+            class_start = i
+            break
+    
+    if class_start is not None:
+        # Get class content, removing RegistryBase inheritance
+        class_content = lines[class_start:]
+        class_content[0] = class_content[0].replace('(RegistryBase)', '')
+        clean_source.extend(class_content)
     
     # Write the file
     target_path = target_dir / f"{meta.name}.py"
-    target_path.write_text('\n'.join(clean_source))    
+    target_path.write_text('\n'.join(clean_source)) 
