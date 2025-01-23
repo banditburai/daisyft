@@ -21,7 +21,17 @@ def install_component(
     # Process source code
     class_content = []
     in_class = False
+    clean_source = []
     
+    # Add detailed docs if verbose mode is on
+    if verbose and meta.detailed_docs:
+        clean_source.append(meta.detailed_docs + "\n")
+    
+    # Add imports
+    clean_source.extend(meta.imports)
+    clean_source.append("")  # Empty line after imports
+    
+    # Process the class
     for line in source.split('\n'):
         # Skip registry decorator and imports we don't need
         if any(x in line for x in ['@Registry', 'from ..base', 'from ..decorators', 'from daisyft', 'DOCS =']):
@@ -36,21 +46,9 @@ def install_component(
             continue
             
         if in_class:
-            # Add the line to class content
             class_content.append(line)
     
-    # Generate clean source
-    clean_source = []
-    
-    # Add detailed docs if verbose
-    if verbose and meta.detailed_docs:
-        clean_source.append(meta.detailed_docs)
-    
-    # Add imports
-    clean_source.extend(meta.imports)
-    clean_source.append("")  # Empty line after imports
-    
-    # Add class
+    # Add class content
     clean_source.extend(class_content)
     
     # Write the file

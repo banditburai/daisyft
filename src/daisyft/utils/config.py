@@ -114,6 +114,7 @@ class ProjectConfig:
             live=self.live,
             host=self.host,
             include_icons=self.include_icons,
+            verbose_docs=self.verbose_docs, 
             components=self.components
         )
 
