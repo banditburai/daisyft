@@ -111,8 +111,8 @@ def add(
                 
                 # Update input.css through sync command
                 progress.update(task, description="Syncing project...")
-                from .sync import sync
-                sync(force=force, config=config)  # Pass the config object
+                from .sync import sync_with_config
+                sync_with_config(config, force)
                 
             progress.update(task, advance=70)
             

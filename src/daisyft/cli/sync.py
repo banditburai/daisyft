@@ -8,22 +8,8 @@ import logging
 console = Console()
 logger = logging.getLogger(__name__)
 
-def sync(
-    force: bool = typer.Option(False, "--force", "-f", help="Force sync even if no changes"),
-    config: Optional[ProjectConfig] = None
-) -> None:
-    """Sync project files and rebuild CSS"""
-    
-    # Load config if not provided
-    if config is None:
-        if not Path("daisyft.conf.py").exists():
-            console.print("[red]Error:[/red] Not in a daisyft project.")
-            console.print("\nTo create a new project, run:")
-            console.print("  [bold]daisyft init[/bold]")
-            console.print("\nOr cd into an existing daisyft project directory.")
-            raise typer.Exit(1)
-        config = ProjectConfig.load()
-
+def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
+    """Internal sync function that works with ProjectConfig object"""
     logger.debug("Starting sync...")
     
     # Ensure directories exist
@@ -46,4 +32,19 @@ def sync(
         css_file.write_text("\n".join(css_content) + "\n")
     
     logger.debug("Sync completed successfully")
-    return True 
+    return True
+
+def sync(
+    force: bool = typer.Option(False, "--force", "-f", help="Force sync even if no changes"),
+) -> None:
+    """Sync project files and rebuild CSS"""
+    
+    if not Path("daisyft.conf.py").exists():
+        console.print("[red]Error:[/red] Not in a daisyft project.")
+        console.print("\nTo create a new project, run:")
+        console.print("  [bold]daisyft init[/bold]")
+        console.print("\nOr cd into an existing daisyft project directory.")
+        raise typer.Exit(1)
+    
+    config = ProjectConfig.load()
+    sync_with_config(config, force) 
