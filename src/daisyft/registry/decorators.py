@@ -68,6 +68,7 @@ class RegistryMeta:
     dependencies: List[str] = field(default_factory=list)
     files: List[str] = field(default_factory=list)
     categories: List[str] = field(default_factory=list)
+    imports: List[str] = field(default_factory=list)
     tailwind: Optional[dict] = None
 
 class RegistryBase:
@@ -135,6 +136,7 @@ class Registry:
                 dependencies=kwargs.get('dependencies', []),
                 files=kwargs.get('files', []),
                 categories=kwargs.get('categories', []),
+                imports=kwargs.get('imports', []),
                 tailwind=kwargs.get('tailwind')
             )
             component_class._registry_meta = meta
