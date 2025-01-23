@@ -4,11 +4,14 @@ import inspect
 from ..registry.base import RegistryBase
 from ..utils.config import ProjectConfig
 from dataclasses import dataclass
+import logging
+
+logger = logging.getLogger(__name__)
 
 def install_component(component_class: Type[RegistryBase], config: ProjectConfig) -> None:
     """Install a component into the user's project"""
     meta = component_class._registry_meta
-    target_dir = component_class.get_install_path(config)  # Use the class method to get path
+    target_dir = Path(component_class.get_install_path(config))  # Ensure Path object
     target_dir.mkdir(parents=True, exist_ok=True)
 
     # Get the source code
@@ -57,6 +60,9 @@ class {meta.name.capitalize()}:
     # Write the file
     target_path = target_dir / f"{meta.name}.py"
     target_path.write_text(clean_source)
+
+    # Log the installation
+    logger.debug(f"Installed component to: {target_path}")
 
 def add_component_css(css_file: Path, tailwind_config: dict) -> None:
     """Add component CSS to input.css"""

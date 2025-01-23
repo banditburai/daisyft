@@ -69,7 +69,8 @@ def add(
 
     logger.debug(f"Component class: {component_class}")
     logger.debug(f"Meta: {component_class._registry_meta}")
-    logger.debug(f"Install path: {component_class.get_install_path(config)}")
+    logger.debug(f"Target directory type: {type(component_class.get_install_path(config))}")
+    logger.debug(f"Target directory: {component_class.get_install_path(config)}")
 
     with Progress(
         SpinnerColumn(),
@@ -109,6 +110,9 @@ def add(
             progress.update(task, description="Updating CSS...")
             from .sync import sync
             sync(force=force)
+            
+            logger.debug(f"Component installed, updating config...")
+            logger.debug(f"Component path: {config.paths['ui'] / f'{component}.py'}")
             
         progress.update(task, advance=70)
 
