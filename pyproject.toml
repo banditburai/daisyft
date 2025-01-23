@@ -38,3 +38,4 @@ python_files = ["test_*.py"]
 
 [project.scripts]
 daisyft = "daisyft.cli.main:app"
+generate-templates = "daisyft.utils.template_generator:generate_all_templates"

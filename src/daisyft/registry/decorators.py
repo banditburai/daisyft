@@ -97,8 +97,15 @@ class RegistryBase:
             if target_path.exists() and not force:
                 return False
             
+            # Determine template name based on file extension
+            template_name = f"components/{file}.jinja2"
+            if file.endswith('.css'):
+                template_name = f"components/{file[:-4]}.css.jinja2"
+            elif file.endswith('.py'):
+                template_name = f"components/{file[:-3]}.py.jinja2"
+            
             render_template(
-                f"components/{file}.jinja2",
+                template_name,
                 target_path,
                 component=cls,
                 meta=meta,

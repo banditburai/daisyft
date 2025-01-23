@@ -1,66 +1,56 @@
 /* {{ component|title }} Component Styles */
-{% if config.components.button %}
-  {% with variants = config.components.button %}
+{% if config.components.{{ component }} %}
+  {% with variants = config.components.{{ component }} %}
+    {# Base styles #}
     {% if variants.base %}
 .{{ variants.base }} {
   @apply inline-flex items-center justify-center gap-2 transition-colors;
 }
     {% endif %}
-    
-    {% if variants.colors %}
-      {% for color, class in variants.colors.items() %}
-.{{ class }} {
-  @apply bg-{{ color }} text-{{ color }}-foreground hover:bg-{{ color }}/90;
+
+    {# Variant styles #}
+    {% if variants.variants %}
+      {% for variant, styles in variants.variants.items() %}
+.btn-{{ variant }} {
+  @apply {{ styles }};
 }
       {% endfor %}
     {% endif %}
 
-    {% if variants.styles %}
-      {% for style_name, class in variants.styles.items() %}
-.{{ class }} {
-  {% if style_name == "outline" %}
-  @apply border border-current bg-transparent;
-  {% elif style_name == "ghost" %}
-  @apply bg-transparent hover:bg-base-200;
-  {% elif style_name == "link" %}
-  @apply bg-transparent underline hover:bg-transparent;
-  {% endif %}
-}
-      {% endfor %}
-    {% endif %}
-
+    {# Size variants #}
     {% if variants.sizes %}
-      {% for size_name, class in variants.sizes.items() %}
-.{{ class }} {
-  {% if size_name == "xs" %}
-  @apply h-6 px-2 text-xs;
-  {% elif size_name == "sm" %}
-  @apply h-8 px-3 text-sm;
-  {% elif size_name == "md" %}
-  @apply h-10 px-4;
-  {% elif size_name == "lg" %}
-  @apply h-12 px-6 text-lg;
-  {% elif size_name == "xl" %}
-  @apply h-14 px-8 text-xl;
-  {% endif %}
+      {% for size, styles in variants.sizes.items() %}
+.btn-{{ size }} {
+  @apply {{ styles }};
 }
       {% endfor %}
     {% endif %}
 
+    {# Style modifiers #}
+    {% if variants.styles %}
+      {% for style, styles in variants.styles.items() %}
+.btn-{{ style }} {
+  @apply {{ styles }};
+}
+      {% endfor %}
+    {% endif %}
+
+    {# Layout modifiers #}
     {% if variants.modifiers %}
-      {% for modifier_name, class in variants.modifiers.items() %}
-.{{ class }} {
-  {% if modifier_name == "block" %}
-  @apply w-full;
-  {% elif modifier_name == "circle" %}
-  @apply rounded-full;
-  {% elif modifier_name == "square" %}
-  @apply aspect-square p-0;
-  {% elif modifier_name == "wide" %}
-  @apply px-8;
-  {% endif %}
+      {% for modifier, styles in variants.modifiers.items() %}
+.btn-{{ modifier }} {
+  @apply {{ styles }};
+}
+      {% endfor %}
+    {% endif %}
+
+    {# State styles #}
+    {% if variants.states %}
+      {% for state, styles in variants.states.items() %}
+.btn-{{ state }} {
+  @apply {{ styles }};
 }
       {% endfor %}
     {% endif %}
   {% endwith %}
-{% endif %} 
+{% endif %}
