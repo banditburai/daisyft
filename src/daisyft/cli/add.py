@@ -103,16 +103,15 @@ def add(
             
             # Add custom CSS if defined
             if component_class._registry_meta.tailwind:
-                css_file = config.paths["css"] / "input.css"
+                progress.update(task, description="Updating CSS...")
+                css_file = Path(config.paths["css"]) / "input.css"
+                logger.debug(f"CSS file path: {css_file}")
                 add_component_css(css_file, component_class._registry_meta.tailwind)
             
             # Update input.css through sync command
-            progress.update(task, description="Updating CSS...")
+            progress.update(task, description="Syncing project...")
             from .sync import sync
             sync(force=force)
-            
-            logger.debug(f"Component installed, updating config...")
-            logger.debug(f"Component path: {config.paths['ui'] / f'{component}.py'}")
             
         progress.update(task, advance=70)
 

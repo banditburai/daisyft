@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Type
+from typing import Type, Dict, Any
 import inspect
 from ..registry.base import RegistryBase
 from ..utils.config import ProjectConfig
@@ -64,11 +64,16 @@ class {meta.name.capitalize()}:
     # Log the installation
     logger.debug(f"Installed component to: {target_path}")
 
-def add_component_css(css_file: Path, tailwind_config: dict) -> None:
+def add_component_css(css_file: Path, tailwind_config: Dict[str, Any]) -> None:
     """Add component CSS to input.css"""
     # Ensure the CSS file exists
     css_file.parent.mkdir(parents=True, exist_ok=True)
-    existing_css = css_file.read_text() if css_file.exists() else ""
+    
+    # Create default CSS content if file doesn't exist
+    if not css_file.exists():
+        css_file.write_text("@import 'tailwindcss';\n@import 'daisyui';")
+    
+    existing_css = css_file.read_text()
     
     new_css = []
     if "components" in tailwind_config:
@@ -81,6 +86,9 @@ def add_component_css(css_file: Path, tailwind_config: dict) -> None:
     
     # Append new CSS if it doesn't already exist
     new_css_text = "\n".join(new_css)
-    if new_css_text not in existing_css:
+    if new_css_text.strip() and new_css_text not in existing_css:
+        logger.debug(f"Adding new CSS to {css_file}")
         with css_file.open("a") as f:
-            f.write(f"\n{new_css_text}\n") 
+            f.write(f"\n{new_css_text}\n")
+    else:
+        logger.debug("No new CSS to add or CSS already exists") 
