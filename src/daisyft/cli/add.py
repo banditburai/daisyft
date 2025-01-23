@@ -4,9 +4,9 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 import questionary
 from pathlib import Path
 from typing import Optional, Type
-from ..registry.decorators import Registry, RegistryType, RegistryBase
+from ..registry.base import RegistryBase
+from ..registry.decorators import Registry
 from ..utils.config import ProjectConfig
-import inspect
 from ..utils.install import install_component, add_component_css
 
 console = Console()
@@ -44,12 +44,10 @@ def add(
             console.print(f"[yellow]No {'components' if component_type == 'UI Component' else 'blocks'} available[/yellow]")
             raise typer.Exit(1)
 
-        # Extract just the component name from the selected choice
         selected = questionary.select(
             f"Select a {'component' if component_type == 'UI Component' else 'block'}:",
             choices=choices
         ).ask()
-        # Extract just the name part before the colon
         component = selected.split(":")[0].strip().lower()
 
     # Get component from registry

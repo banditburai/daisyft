@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional, Union, List, Any
 from fasthtml.common import *
-from ..decorators import Registry, RegistryBase
+from ..base import RegistryBase
+from ..decorators import Registry
 from daisyft.utils.templates import render_template
 import inspect
 

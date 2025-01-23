@@ -1,101 +1,13 @@
 # ============================================================================
 #  Component Registry and Metadata
 # ============================================================================
-
 from __future__ import annotations
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import List, Optional, Type, TypeVar, Callable, Any, Protocol, Dict, ClassVar
-from pathlib import Path
-from ..utils.config import ProjectConfig
-from ..utils.templates import render_template
-from ..utils.install import install_component
-
-class RegistryType(str, Enum):
-    COMPONENT = "component"
-    BLOCK = "block"
-    UI = "ui"
-    
-    # Framework types
-    LIB = "lib"
-    HOOK = "hook"
-    THEME = "theme"
-    
-    # Content types
-    PAGE = "page"
-    FILE = "file"
-
-    @property
-    def is_core(self) -> bool:
-        return self in {self.COMPONENT, self.BLOCK, self.UI}
-
-    @property
-    def is_framework(self) -> bool:
-        return self in {self.LIB, self.HOOK, self.THEME}
-
-    @property
-    def is_content(self) -> bool:
-        return self in {self.PAGE, self.FILE}
-
-@dataclass
-class TailwindConfig:
-    content: List[str] = field(default_factory=list)
-    theme: dict = field(default_factory=dict)
-    plugins: List[str] = field(default_factory=list)
-
-@dataclass
-class CSSVars:
-    light: dict = None
-    dark: dict = None
-
-    def __post_init__(self):
-        self.light = self.light or {}
-        self.dark = self.dark or {}
-
-@dataclass
-class RegistryFile:
-    path: str
-    type: RegistryType
-    content: Optional[str] = None
-    target: Optional[str] = None
-
-@dataclass
-class RegistryMeta:
-    """Metadata for registry items"""
-    name: str
-    type: RegistryType
-    description: Optional[str] = None
-    author: Optional[str] = None
-    dependencies: List[str] = field(default_factory=list)
-    files: List[str] = field(default_factory=list)
-    categories: List[str] = field(default_factory=list)
-    imports: List[str] = field(default_factory=list)
-    tailwind: Optional[dict] = None
-
-class RegistryBase:
-    """Base class for registry components"""
-    _registry_meta: ClassVar[RegistryMeta]
-
-    @classmethod
-    def get_install_path(cls, config: ProjectConfig) -> Path:
-        """Get the installation path for this component"""
-        meta = cls._registry_meta
-        if meta.type == RegistryType.BLOCK:
-            return (config.paths["components"] / meta.name 
-                   if len(meta.files) > 1 
-                   else config.paths["components"])
-        return config.paths["ui"]
-
-    @classmethod
-    def install(cls, config: ProjectConfig, force: bool = False) -> bool:
-        """Install this component into the project"""
-        meta = cls._registry_meta
-        target_dir = config.paths["ui"]
-        
-        # Install the component file
-        install_component(cls, config)
-        
-        return True
+from typing import List, Optional, Type, TypeVar, Dict
+from .base import (
+    RegistryBase, 
+    RegistryType, 
+    RegistryMeta
+)
 
 T = TypeVar('T', bound=RegistryBase)
 

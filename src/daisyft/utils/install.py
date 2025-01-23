@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Type
 import inspect
-from ..registry.decorators import RegistryBase
+from ..registry.base import RegistryBase
 from ..utils.config import ProjectConfig
 
 def install_component(component_class: Type[RegistryBase], config: ProjectConfig) -> None:
