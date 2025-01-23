@@ -44,16 +44,18 @@ def add(
             console.print(f"[yellow]No {'components' if component_type == 'UI Component' else 'blocks'} available[/yellow]")
             raise typer.Exit(1)
 
+        # Get the raw string value from questionary selection
         selected = questionary.select(
             f"Select a {'component' if component_type == 'UI Component' else 'block'}:",
             choices=choices
         ).ask()
         
-        # Extract just the component name from the selection
-        component = selected.split(":")[0].strip().lower() if selected else None
-        if not component:
+        if not selected:
             console.print("[red]No component selected[/red]")
             raise typer.Exit(1)
+            
+        # Extract just the component name from the selection string
+        component = selected.split(":", 1)[0].strip().lower()
 
     # Get component from registry
     component_class = Registry.get_any(component)
