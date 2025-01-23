@@ -65,6 +65,7 @@ class RegistryMeta:
     categories: List[str] = field(default_factory=list)
     imports: List[str] = field(default_factory=list)
     tailwind: Optional[dict] = None
+    detailed_docs: Optional[str] = None  # New field for detailed documentation
 
 class RegistryBase:
     """Base class for registry components"""
