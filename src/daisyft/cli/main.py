@@ -5,13 +5,13 @@ from typing import Optional, List
 from daisyft.cli import init, add
 from . import build, dev, run, sync
 from .registry import commands as registry_commands
+from ..utils.console import console
 
 app = typer.Typer(
     name="daisyft",
     help="DaisyUI/Tailwind/Motion components for FastHTML",
     no_args_is_help=True
 )
-console = Console()
 
 # Register commands
 app.command()(init.init)

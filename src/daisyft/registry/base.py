@@ -81,13 +81,12 @@ class RegistryBase:
         return config.paths["ui"]
 
     @classmethod
-    def install(cls, config: ProjectConfig, force: bool = False) -> bool:
+    def install(cls, config: ProjectConfig, force: bool = False, verbose: bool = True) -> bool:
         """Install this component into the project"""
         from ..utils.install import install_component  # Move import here to avoid circular import
         meta = cls._registry_meta
-        target_dir = config.paths["ui"]
         
         # Install the component file
-        install_component(cls, config)
+        install_component(cls, config, verbose=verbose)
         
         return True 

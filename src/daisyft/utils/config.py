@@ -66,6 +66,7 @@ class ProjectConfig:
     theme: str = "dark"
     app_path: Path = Path("main.py")
     include_icons: bool = True
+    verbose_docs: bool = True 
     host: str = "localhost"
     port: int = 5001
     live: bool = True 

@@ -10,13 +10,11 @@ import requests
 import stat
 from platform import system
 from questionary import Choice
-
+from ..utils.console import console 
 from ..utils.config import ProjectConfig, TailwindReleaseInfo
 from ..utils.templates import render_template
 from ..utils.package import PackageManager
 from ..registry.decorators import Registry, RegistryType
-
-console = Console()
 
 def get_release_info(style: str = "daisy") -> dict:
     """Get latest release info from GitHub"""

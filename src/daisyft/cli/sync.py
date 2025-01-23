@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import Optional
 from ..utils.config import ProjectConfig
 import logging
-
-console = Console()
+from ..utils.console import console
 logger = logging.getLogger(__name__)
 
 def sync_with_config(config: ProjectConfig, force: bool = False) -> None:

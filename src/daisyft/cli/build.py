@@ -3,8 +3,7 @@ from pathlib import Path
 import subprocess
 from rich.console import Console
 from ..utils.config import ProjectConfig
-
-console = Console()
+from ..utils.console import console  
 
 def build(
     input_path: str = typer.Option(None, "--input", "-i", help="Input CSS file path"),

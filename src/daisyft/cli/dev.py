@@ -7,8 +7,7 @@ import time
 from rich.console import Console
 from ..utils.config import ProjectConfig
 from ..utils.process import ProcessManager
-
-console = Console()
+from ..utils.console import console
 
 def dev(
     host: str = typer.Option(None, "--host", "-h", help="Override host from config"),

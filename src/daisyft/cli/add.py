@@ -7,8 +7,7 @@ from typing import Optional, Type
 from ..registry.base import RegistryBase
 from ..registry.decorators import Registry
 from ..utils.config import ProjectConfig
-
-console = Console()
+from ..utils.console import console
 
 def add(
     component: Optional[str] = typer.Argument(None, help="Component or block to add"),
@@ -105,11 +104,13 @@ def install_with_confirmation(
     component_class: Type[RegistryBase], 
     config: ProjectConfig, 
     force: bool = False,
-    verbose: bool = True
+    verbose: bool = None
 ) -> bool:
     """Handle component installation with user confirmation."""
     if not force and config.has_component(component_class._registry_meta.name):
         if not typer.confirm(f"{component_class._registry_meta.name} is already installed. Overwrite?"):
             return False
     
+    # Use config's preference if verbose not explicitly set
+    verbose = config.verbose_docs if verbose is None else verbose
     return component_class.install(config, force=True, verbose=verbose)
