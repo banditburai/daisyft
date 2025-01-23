@@ -6,7 +6,13 @@ from ..decorators import Registry
 from daisyft.utils.templates import render_template
 import inspect
 
-DETAILED_DOCS = """Args:
+DOCS = """
+Button Component
+===============
+
+A complete button component that supports all DaisyUI button variants, styles, and states.
+
+Args:
     content: Button content (text, icons, or list of elements)
     variant: Color variant of the button
     size: Size variant of the button
@@ -46,10 +52,6 @@ Available Modifiers:
     - square: 1:1 aspect ratio
     - circle: 1:1 aspect ratio with rounded corners
 
-States:
-    - disabled: Applies disabled styling
-    - loading: Shows loading spinner
-
 Examples:
     ```python
     # Basic button
@@ -63,20 +65,8 @@ Examples:
     
     # Full width success button
     Button("Download", variant="success", modifier="block")
-    
-    # Loading state
-    Button("Processing", loading=True)
-    
-    # Custom classes
-    Button("Custom", cls="my-custom-class")
     ```
-
-Notes:
-    - All DaisyUI button classes are supported
-    - Custom classes can be added via the cls parameter
-    - Content can be a string, element, or list of elements
-    - Icons are automatically sized and positioned"""
-
+"""
 
 @Registry.component(
     name="button",
@@ -89,14 +79,13 @@ Notes:
         "from typing import Optional, Union, List, Any",
         "from fasthtml.common import *"
     ],
-    detailed_docs=DETAILED_DOCS
+    detailed_docs=DOCS
 )
-
 @dataclass
 class Button(RegistryBase):
     """A versatile button component with multiple variants and states."""
     content: Union[str, List, None] = None
-    variant: str = "default"  # Now supports custom variants
+    variant: str = "default"
     size: str = "md"
     style: Optional[str] = None
     modifier: Optional[str] = None
