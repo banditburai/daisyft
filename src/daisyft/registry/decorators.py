@@ -30,7 +30,8 @@ class Registry:
                 files=kwargs.get('files', []),
                 categories=kwargs.get('categories', []),
                 imports=kwargs.get('imports', []),
-                tailwind=kwargs.get('tailwind')
+                tailwind=kwargs.get('tailwind'),
+                detailed_docs=kwargs.get('detailed_docs')
             )
             component_class._registry_meta = meta
             
