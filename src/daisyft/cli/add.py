@@ -13,6 +13,7 @@ console = Console()
 def add(
     component: Optional[str] = typer.Argument(None, help="Component or block to add"),
     force: bool = typer.Option(False, "--force", "-f", help="Overwrite existing files"),
+    verbose: bool = typer.Option(True, "--verbose/--brief", help="Include detailed documentation")
 ) -> None:
     """Add a component or block to your project"""
     
@@ -72,13 +73,13 @@ def add(
                     if not config.has_component(dep):
                         dep_class = Registry.get_component(dep)
                         if dep_class:
-                            install_with_confirmation(dep_class, config, force)
+                            install_with_confirmation(dep_class, config, force, verbose)
             
             progress.update(task, advance=30)
             
             # Install the component files
             progress.update(task, description="Installing component files...")
-            if install_with_confirmation(component_class, config, force):
+            if install_with_confirmation(component_class, config, force, verbose):
                 # Track the component in config
                 component_path = config.paths["ui"] / f"{component}.py"
                 config.add_component(
@@ -100,10 +101,15 @@ def add(
             console.print(f"[red]Error:[/red] {str(e)}")
             raise typer.Exit(1)
 
-def install_with_confirmation(component_class: Type[RegistryBase], config: ProjectConfig, force: bool) -> bool:
-    """Handle component installation with user confirmation. Returns True if installed."""
+def install_with_confirmation(
+    component_class: Type[RegistryBase], 
+    config: ProjectConfig, 
+    force: bool = False,
+    verbose: bool = True
+) -> bool:
+    """Handle component installation with user confirmation."""
     if not force and config.has_component(component_class._registry_meta.name):
         if not typer.confirm(f"{component_class._registry_meta.name} is already installed. Overwrite?"):
             return False
     
-    return component_class.install(config, force=True)
+    return component_class.install(config, force=True, verbose=verbose)

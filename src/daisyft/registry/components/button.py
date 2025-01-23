@@ -21,9 +21,10 @@ import inspect
 @dataclass
 class Button(RegistryBase):
     """A versatile button component with multiple variants and states.
-    
+
     This component wraps DaisyUI's button classes for easy use in FastHTML.
-    
+
+    ---
     Args:
         content: Button content (text, icons, or list of elements)
         variant: Color variant of the button
@@ -33,7 +34,7 @@ class Button(RegistryBase):
         disabled: Whether the button is disabled
         loading: Whether to show a loading spinner
         cls: Additional custom classes
-    
+
     Available Variants (colors):
         - default: Default button style
         - neutral: Neutral color
@@ -44,30 +45,30 @@ class Button(RegistryBase):
         - success: Success/positive color
         - warning: Warning color
         - error: Error/negative color
-    
+
     Available Sizes:
         - xs: Extra small
         - sm: Small
         - md: Medium (default)
         - lg: Large
         - xl: Extra large
-    
+
     Available Styles:
         - outline: Outlined variant
         - ghost: Ghost/transparent variant
         - link: Looks like a link
         - soft: Soft/subtle variant
-    
+
     Available Modifiers:
         - wide: More horizontal padding
         - block: Full width button
         - square: 1:1 aspect ratio
         - circle: 1:1 aspect ratio with rounded corners
-    
+
     States:
         - disabled: Applies disabled styling
         - loading: Shows loading spinner
-    
+
     Examples:
         ```python
         # Basic button
@@ -88,7 +89,7 @@ class Button(RegistryBase):
         # Custom classes
         Button("Custom", cls="my-custom-class")
         ```
-    
+
     Notes:
         - All DaisyUI button classes are supported
         - Custom classes can be added via the cls parameter
