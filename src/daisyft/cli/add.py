@@ -79,43 +79,49 @@ def add(
     ) as progress:
         task = progress.add_task("Installing component...", total=100)
         
-        # Check and install dependencies
-        if component_class._registry_meta.dependencies:
-            progress.update(task, description="Checking dependencies...")
-            for dep in component_class._registry_meta.dependencies:
-                if not config.has_component(dep):
-                    dep_class = Registry.get_component(dep)
-                    if dep_class:
-                        install_with_confirmation(dep_class, config, force)
-        
-        progress.update(task, advance=30)
-        
-        # Install the component files
-        progress.update(task, description="Installing component files...")
-        if install_with_confirmation(component_class, config, force):
-            # Track the component in config
-            component_path = config.paths["ui"] / f"{component}.py"
-            config.add_component(
-                name=component,
-                type=component_class._registry_meta.type,
-                path=component_path
-            )
+        try:
+            # Check and install dependencies
+            if component_class._registry_meta.dependencies:
+                progress.update(task, description="Checking dependencies...")
+                for dep in component_class._registry_meta.dependencies:
+                    if not config.has_component(dep):
+                        dep_class = Registry.get_component(dep)
+                        if dep_class:
+                            install_with_confirmation(dep_class, config, force)
             
-            # Add custom CSS if defined
-            if component_class._registry_meta.tailwind:
-                progress.update(task, description="Updating CSS...")
-                css_file = Path(config.paths["css"]) / "input.css"
-                logger.debug(f"CSS file path: {css_file}")
-                add_component_css(css_file, component_class._registry_meta.tailwind)
+            progress.update(task, advance=30)
             
-            # Update input.css through sync command
-            progress.update(task, description="Syncing project...")
-            from .sync import sync
-            sync(force=force)
+            # Install the component files
+            progress.update(task, description="Installing component files...")
+            if install_with_confirmation(component_class, config, force):
+                # Track the component in config
+                component_path = config.paths["ui"] / f"{component}.py"
+                config.add_component(
+                    name=component,
+                    type=component_class._registry_meta.type,
+                    path=component_path
+                )
+                
+                # Add custom CSS if defined
+                if component_class._registry_meta.tailwind:
+                    progress.update(task, description="Updating CSS...")
+                    css_file = Path(config.paths["css"]) / "input.css"
+                    logger.debug(f"CSS file path: {css_file}")
+                    add_component_css(css_file, component_class._registry_meta.tailwind)
+                
+                # Update input.css through sync command
+                progress.update(task, description="Syncing project...")
+                from .sync import sync
+                sync(force=force, config=config)  # Pass the config object
+                
+            progress.update(task, advance=70)
             
-        progress.update(task, advance=70)
-
-    console.print(f"[green]✓[/green] Added {component} successfully!")
+            console.print(f"[green]✓[/green] Added {component} successfully!")
+            
+        except Exception as e:
+            logger.error(f"Error during installation: {e}", exc_info=True)
+            console.print(f"[red]Error:[/red] {str(e)}")
+            raise typer.Exit(1)
 
 def install_with_confirmation(component_class: Type[RegistryBase], config: ProjectConfig, force: bool) -> bool:
     """Handle component installation with user confirmation. Returns True if installed."""
