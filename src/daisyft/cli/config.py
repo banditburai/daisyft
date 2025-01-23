@@ -7,16 +7,16 @@ app = typer.Typer()
 
 @app.command()
 def config(
-    verbose_docs: bool = typer.Option(
+    verbose: bool = typer.Option(
         None, 
-        "--verbose-docs/--brief-docs", 
+        "--verbose/--brief", 
         help="Set documentation verbosity for components"
     ),
 ):
     """Configure project settings"""
     config = ProjectConfig.load()
     
-    if verbose_docs is not None:
-        config.verbose_docs = verbose_docs
+    if verbose is not None:
+        config.verbose = verbose
         config.save()
-        console.print(f"Documentation verbosity set to: [green]{'verbose' if verbose_docs else 'brief'}[/green]")
+        console.print(f"Documentation verbosity set to: [green]{'verbose' if verbose else 'brief'}[/green]")

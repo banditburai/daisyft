@@ -89,7 +89,7 @@ class InitOptions:
     include_icons: bool = True
     components_dir: Path = Path("components")
     static_dir: Path = Path("static")
-    verbose_docs: bool = True
+    verbose: bool = True
 
 def get_user_options(defaults: bool = False) -> InitOptions:
     """Get project options either from user input or defaults"""
@@ -103,7 +103,7 @@ def get_user_options(defaults: bool = False) -> InitOptions:
         "include_icons": (True, "Include ft-icons package for SVG icon components"),
         "components_dir": ("components", "Directory where your UI components will be stored"),
         "static_dir": ("static", "Directory for CSS, JavaScript, and other static assets"),
-        "verbose_docs": (True, "Include detailed documentation in component files")
+        "verbose": (True, "Include detailed documentation in component files")
     }
     
     # Show current configuration
@@ -179,8 +179,8 @@ def get_user_options(defaults: bool = False) -> InitOptions:
             default="static"
         ).ask()
     
-    if "verbose_docs" in to_change:
-        answers["verbose_docs"] = questionary.confirm(
+    if "verbose" in to_change:
+        answers["verbose"] = questionary.confirm(
             "Include detailed documentation in component files?",
             default=True
         ).ask()
@@ -192,7 +192,7 @@ def get_user_options(defaults: bool = False) -> InitOptions:
         include_icons=answers["include_icons"],
         components_dir=Path(answers["components_dir"]),
         static_dir=Path(answers["static_dir"]),
-        verbose_docs=answers["verbose_docs"]
+        verbose=answers["verbose"]
     )
 
 def init(
@@ -217,7 +217,7 @@ def init(
         config.theme = options.theme
         config.app_path = options.app_path
         config.include_icons = options.include_icons
-        config.verbose_docs = options.verbose_docs
+        config.verbose = options.verbose
         config.paths.update({
             "components": options.components_dir,
             "ui": options.components_dir / "ui",

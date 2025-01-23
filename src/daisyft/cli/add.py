@@ -112,5 +112,5 @@ def install_with_confirmation(
             return False
     
     # Use config's preference if verbose not explicitly set
-    verbose = config.verbose_docs if verbose is None else verbose
+    verbose = config.verbose if verbose is None else verbose
     return component_class.install(config, force=True, verbose=verbose)
