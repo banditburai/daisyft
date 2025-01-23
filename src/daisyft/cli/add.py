@@ -48,7 +48,12 @@ def add(
             f"Select a {'component' if component_type == 'UI Component' else 'block'}:",
             choices=choices
         ).ask()
-        component = selected.split(":")[0].strip().lower()
+        
+        # Extract just the component name from the selection
+        component = selected.split(":")[0].strip().lower() if selected else None
+        if not component:
+            console.print("[red]No component selected[/red]")
+            raise typer.Exit(1)
 
     # Get component from registry
     component_class = Registry.get_any(component)
