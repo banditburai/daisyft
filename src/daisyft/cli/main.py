@@ -2,8 +2,7 @@ import typer
 from rich.console import Console
 from pathlib import Path
 from typing import Optional, List
-from daisyft.cli import init, add
-from . import build, dev, run, sync
+from daisyft.cli import init, add, config, build, dev, run, sync
 from .registry import commands as registry_commands
 from ..utils.console import console
 
@@ -20,6 +19,7 @@ app.command()(build.build)
 app.command()(dev.dev)
 app.command()(run.run)
 app.command()(sync.sync)
+app.command()(config.config)
 
 # Add registry commands as a group
 app.add_typer(registry_commands.registry_app, name="registry")
