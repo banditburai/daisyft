@@ -9,6 +9,7 @@ from typing import List, Optional, Type, TypeVar, Callable, Any, Protocol, Dict,
 from pathlib import Path
 from ..utils.config import ProjectConfig
 from ..utils.templates import render_template
+from ..utils.install import install_component
 
 class RegistryType(str, Enum):
     COMPONENT = "component"
@@ -87,34 +88,14 @@ class RegistryBase:
 
     @classmethod
     def install(cls, config: ProjectConfig, force: bool = False) -> bool:
-        """Install this component and its dependencies"""
+        """Install this component into the project"""
         meta = cls._registry_meta
-        target_dir = cls.get_install_path(config)
-        target_dir.mkdir(parents=True, exist_ok=True)
-
-        files_written = False
-        for file in meta.files:
-            target_path = target_dir / file
-            if target_path.exists() and not force:
-                return False
-            
-            # Determine template name based on file extension
-            template_name = f"components/{file}.jinja2"
-            if file.endswith('.css'):
-                template_name = f"components/{file[:-4]}.css.jinja2"
-            elif file.endswith('.py'):
-                template_name = f"components/{file[:-3]}.py.jinja2"
-            
-            render_template(
-                template_name,
-                target_path,
-                component=cls,
-                meta=meta,
-                config=config
-            )
-            files_written = True
-
-        return files_written
+        target_dir = config.paths["ui"]
+        
+        # Install the component file
+        install_component(cls, config)
+        
+        return True
 
 T = TypeVar('T', bound=RegistryBase)
 

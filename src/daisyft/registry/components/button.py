@@ -15,7 +15,21 @@ import inspect
         "from dataclasses import dataclass",
         "from typing import Optional, Union, List, Any",
         "from fasthtml.common import *"
-    ]
+    ],
+    # Add CSS definitions for custom variants
+    tailwind={
+        "components": {
+            # Custom button variants
+            "btn-custom": """
+                @apply btn bg-purple-500 text-white hover:bg-purple-600;
+                /* Custom styles for the custom variant */
+            """,
+            "btn-gradient": """
+                @apply btn bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0;
+                /* Gradient button style */
+            """
+        }
+    }
 )
 @dataclass
 class Button(RegistryBase):
