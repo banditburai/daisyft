@@ -67,6 +67,10 @@ def add(
         console.print(f"[red]Error:[/red] Component '{component}' not found")
         raise typer.Exit(1)
 
+    logger.debug(f"Component class: {component_class}")
+    logger.debug(f"Meta: {component_class._registry_meta}")
+    logger.debug(f"Install path: {component_class.get_install_path(config)}")
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
