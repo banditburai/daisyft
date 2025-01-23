@@ -1,7 +1,7 @@
 {# Configuration file template for daisyft projects #}
 from pathlib import Path
 from datetime import datetime
-from daisyft import ProjectConfig, BinaryMetadata
+from daisyft import ProjectConfig, BinaryMetadata, ComponentMetadata
 
 # Note: After changing settings like port/host/live, run 'daisyft sync' 
 # to update your main.py with the new values
@@ -29,8 +29,17 @@ config = ProjectConfig(
         downloaded_at=datetime.fromisoformat("{{ binary_metadata.downloaded_at.isoformat() }}"),
         sha="{{ binary_metadata.sha }}",
         release_id={{ binary_metadata.release_id }}
-    )
+    ),
     {% else %}
-    binary_metadata=None
+    binary_metadata=None,
     {% endif %}
+    components={
+        {% for name, comp in components.items() %}
+        "{{ name }}": ComponentMetadata(
+            name="{{ comp.name }}",
+            type="{{ comp.type }}",
+            path=Path("{{ comp.path }}")
+        ),
+        {% endfor %}
+    }
 ) 

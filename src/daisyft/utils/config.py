@@ -105,13 +105,15 @@ class ProjectConfig:
             "daisyft.conf.py.jinja2",
             path,
             style=self.style,
+            theme=self.theme,
             app_path=self.app_path,
             paths=self.paths,
             binary_metadata=self.binary_metadata,
             port=self.port,
             live=self.live,
             host=self.host,
-            include_icons=self.include_icons
+            include_icons=self.include_icons,
+            components=self.components
         )
 
     def update_binary_metadata(self, release_info: dict) -> None:

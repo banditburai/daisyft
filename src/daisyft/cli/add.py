@@ -8,8 +8,11 @@ from ..registry.base import RegistryBase
 from ..registry.decorators import Registry
 from ..utils.config import ProjectConfig
 from ..utils.install import install_component, add_component_css
+import logging
 
 console = Console()
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def add(
     component: Optional[str] = typer.Argument(None, help="Component or block to add"),
@@ -30,32 +33,33 @@ def add(
     
     if not component:
         # Interactive component selection
+        logger.debug("Starting interactive selection")
         component_type = questionary.select(
             "What would you like to add?",
             choices=["UI Component", "Block"]
         ).ask()
+        logger.debug(f"Selected type: {component_type}")
 
         if component_type == "UI Component":
             choices = Registry.get_available_components()
         else:
             choices = Registry.get_available_blocks()
+        
+        logger.debug(f"Available choices: {choices}")
 
-        if not choices:
-            console.print(f"[yellow]No {'components' if component_type == 'UI Component' else 'blocks'} available[/yellow]")
-            raise typer.Exit(1)
-
-        # Get the raw string value from questionary selection
         selected = questionary.select(
             f"Select a {'component' if component_type == 'UI Component' else 'block'}:",
             choices=choices
         ).ask()
+        logger.debug(f"Raw selection: {selected}, type: {type(selected)}")
         
         if not selected:
             console.print("[red]No component selected[/red]")
             raise typer.Exit(1)
             
         # Extract just the component name from the selection string
-        component = selected.split(":", 1)[0].strip().lower()
+        component = str(selected).split(":", 1)[0].strip().lower()
+        logger.debug(f"Extracted component name: {component}")
 
     # Get component from registry
     component_class = Registry.get_any(component)
