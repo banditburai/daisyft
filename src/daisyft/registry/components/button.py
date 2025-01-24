@@ -3,6 +3,7 @@ from typing import Union, List, Any, Dict
 from fasthtml.common import Button as FastButton, Span
 from ..decorators import Registry
 from daisyft.utils.variants import ComponentVariant, variant
+from ..base import RegistryBase
 
 DOCS = """
 Button Component
@@ -46,7 +47,7 @@ Adding Variants:
 )
 
 @dataclass
-class Button:
+class Button(RegistryBase):
     """A button component that supports DaisyUI classes and custom variants."""
     content: Union[str, List[Any], None]
     cls: str = ""
