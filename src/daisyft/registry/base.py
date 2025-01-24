@@ -127,7 +127,9 @@ class RegistryBase:
         class_body = textwrap.dedent('\n'.join(class_body_lines))
         
         # Get variants section if it exists
-        variants_marker = f"#  {cls.__name__} Variants"
+        variants_marker = f"""# ============================================================================
+#  {cls.__name__} Variants
+# ============================================================================"""
         variants_source = module_source.split(variants_marker)[1].strip() if variants_marker in module_source else ""
         
         # Prepare template context
