@@ -7,6 +7,7 @@ from ..utils.config import ProjectConfig
 import inspect
 import jinja2
 import os
+import textwrap
 
 @dataclass
 class TailwindConfig:
@@ -122,7 +123,8 @@ class RegistryBase:
             if in_class and not line.strip().startswith('@'):
                 class_body_lines.append(line)
         
-        class_body = '\n'.join(class_body_lines)
+        # Dedent the class body before passing to template
+        class_body = textwrap.dedent('\n'.join(class_body_lines))
         
         # Get variants section if it exists
         variants_marker = f"#  {cls.__name__} Variants"

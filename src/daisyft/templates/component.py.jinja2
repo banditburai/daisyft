@@ -10,7 +10,7 @@ from daisyft import ComponentVariant, variant
 
 @dataclass
 class {{ class_name }}:
-    {{ class_body | indent(3) }}
+    {{ class_body | indent(4) }}
 
 {%- if variants_source %}
 
