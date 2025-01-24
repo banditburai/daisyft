@@ -12,6 +12,8 @@ from ..utils.console import console
 def run(
     host: str = typer.Option(None, "--host", "-h", help="Override host from config"),
     port: int = typer.Option(None, "--port", "-p", help="Override port from config"),
+    input_css: str = typer.Option(None, "--input", "-i", help="Input CSS file path"),
+    output_css: str = typer.Option(None, "--output", "-o", help="Output CSS file path"),
 ) -> None:
     """Build CSS and run the FastHTML application"""
     config = ProjectConfig.load(Path("daisyft.conf.py"))
@@ -21,14 +23,22 @@ def run(
     port = port or config.port
     
     pm = ProcessManager()
+
+    input_css_path = Path(input_css) if input_css else Path(config.paths["css"]) / "input.css"
+    output_css_path = Path(output_css) if output_css else Path(config.paths["css"]) / "output.css"
+    
+    # Delete existing output.css if it exists
+    if output_css_path.exists():
+        output_css_path.unlink()
+        console.print("[bold]Cleaning existing CSS...[/bold]")
     
     # Build CSS first
     console.print("[bold]Building CSS...[/bold]")
     try:
         subprocess.run([
             "./tailwindcss",
-            "-i", str(Path(config.paths["css"]) / "input.css"),
-            "-o", str(Path(config.paths["css"]) / "output.css"),
+            "-i", str(input_css_path),
+            "-o", str(output_css_path),
             "--minify"
         ], check=True)
         console.print("[green]✓[/green] CSS built successfully!")

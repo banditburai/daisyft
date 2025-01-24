@@ -64,6 +64,8 @@ def add(
                 
             progress.update(task, advance=70)
             console.print(f"[green]✓[/green] Added {component_name} successfully!")
+            console.print("\nTo use this component, add the following import:")
+            console.print(f"[bold]from components.ui.{component_name} import {component_name.title()}[/bold]")
             
         except Exception as e:
             console.print(f"[red]Error:[/red] {str(e)}")

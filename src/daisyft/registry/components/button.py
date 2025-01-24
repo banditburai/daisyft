@@ -1,69 +1,32 @@
 from dataclasses import dataclass
-from typing import Optional, Union, List, Any
-from fasthtml.common import *
-from ..base import RegistryBase
+from typing import Union, List, Any, Dict
+from fasthtml.common import Button as FastButton, Span
 from ..decorators import Registry
-from daisyft.utils.templates import render_template
-import inspect
+from daisyft.utils.variants import ComponentVariant, variant
 
 DOCS = """
 Button Component
 ===============
 
-A complete button component that supports all DaisyUI button variants, styles, and states.
+A flexible button component that supports both DaisyUI and custom variants.
 
-Args:
-    content: Button content (text, icons, or list of elements)
-    variant: Color variant of the button
-    size: Size variant of the button
-    style: Style variant of the button
-    modifier: Layout modifier for the button
-    disabled: Whether the button is disabled
-    loading: Whether to show a loading spinner
-    cls: Additional custom classes
+Usage:
+    Button("Click me")                      # Basic button
+    Button("Submit", var="primary")         # DaisyUI variant
+    Button("Custom", var="fancy-gradient")  # Custom variant
+    Button([Icon.check, "Submit"])       # With icon
 
-Available Variants (colors):
-    - default: Default button style
-    - neutral: Neutral color
-    - primary: Primary brand color
-    - secondary: Secondary brand color
-    - accent: Accent color
-    - info: Information color
-    - success: Success/positive color
-    - warning: Warning color
-    - error: Error/negative color
+Adding Variants:
+1. DaisyUI variants (uses btn- classes):
+    BUTTON_VARIANTS["primary"] = ButtonVariant("btn-primary")
 
-Available Sizes:
-    - xs: Extra small
-    - sm: Small
-    - md: Medium (default)
-    - lg: Large
-    - xl: Extra large
+2. Custom class-based variants:
+    BUTTON_VARIANTS["custom"] = ButtonVariant("bg-purple-500...", daisy=False)
 
-Available Styles:
-    - outline: Outlined variant
-    - ghost: Ghost/transparent variant
-    - link: Looks like a link
-    - soft: Soft/subtle variant
-
-Available Modifiers:
-    - wide: More horizontal padding
-    - block: Full width button
-    - square: 1:1 aspect ratio
-    - circle: 1:1 aspect ratio with rounded corners
-
-Examples:
-    # Basic button
-    Button("Click me")
-    
-    # Primary button with icon
-    Button([Icon("check"), "Submit"], variant="primary")
-    
-    # Large ghost button
-    Button("Menu", style="ghost", size="lg")
-    
-    # Full width success button
-    Button("Download", variant="success", modifier="block")
+3. Complex variants with custom structure:
+    @variant("fancy", "relative group...")
+    def fancy_button(content):
+        return [Span(...), Span(...)]
 """
 
 @Registry.component(
@@ -74,58 +37,45 @@ Examples:
     files=["button.py"],
     imports=[
         "from dataclasses import dataclass",
-        "from typing import Optional, Union, List, Any",
-        "from fasthtml.common import *"
+        "from typing import Union, List, Any, Optional, Callable, Dict",
+        "from functools import partial",
+        "from daisyft import ComponentVariant, variant",
+        "from fasthtml.common import Button as FastButton, Span",
     ],
     detailed_docs=DOCS
 )
+
 @dataclass
-class Button(RegistryBase):
-    """A versatile button component with multiple variants and states."""
-    content: Union[str, List, None] = None
-    variant: str = "default"
-    size: str = "md"
-    style: Optional[str] = None
-    modifier: Optional[str] = None
+class Button:
+    """A button component that supports DaisyUI classes and custom variants."""
+    content: Union[str, List[Any], None]
+    cls: str = ""
+    var: str = ""
     disabled: bool = False
     loading: bool = False
-    cls: str = ""
-
-    # Define custom variants
-    CUSTOM_VARIANTS = {
-        "custom": "bg-purple-500 text-white hover:bg-purple-600",
-        "gradient": "bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0",
-    }
 
     def get_classes(self) -> str:
-        """Combine all classes based on props"""
-        classes = [
-            # Base button class
-            "btn",
-            # Handle both built-in and custom variants
-            self._get_variant_classes(),
-            # Size
-            f"btn-{self.size}" if self.size != "md" else "",
-            # Style (outline, ghost, etc)
-            f"btn-{self.style}" if self.style else "",
-            # Modifier (wide, block, etc)
-            f"btn-{self.modifier}" if self.modifier else "",
-            # States
-            "btn-disabled" if self.disabled else "",
-            "loading" if self.loading else "",
-            # Custom classes
-            self.cls
-        ]
+        """Generate the complete class string."""
+        variant_config = BUTTON_VARIANTS.get(self.var, ButtonVariant(""))
+        
+        classes = []
+        if variant_config.daisy:
+            classes.append("btn")
+        if variant_config.classes:
+            classes.append(variant_config.classes)
+        if self.cls:
+            classes.append(self.cls)
+        if self.disabled:
+            classes.append("btn-disabled" if variant_config.daisy else "opacity-50 cursor-not-allowed")
+        if self.loading:
+            classes.append("loading" if variant_config.daisy else "")
+            
         return " ".join(filter(None, classes))
 
-    def _get_variant_classes(self) -> str:
-        """Get variant-specific classes"""
-        if self.variant in self.CUSTOM_VARIANTS:
-            return self.CUSTOM_VARIANTS[self.variant]
-        return f"btn-{self.variant}" if self.variant != "default" else ""
-
-    def __ft__(self) -> Any:
-        """Render the button component."""
+    def prepare_content(self) -> List[Any]:
+        """Prepare button content including loading state and wrappers."""
+        variant_config = BUTTON_VARIANTS.get(self.var, ButtonVariant(""))
+        
         content = []
         if self.loading:
             content.append(Span(cls="loading loading-spinner"))
@@ -135,10 +85,95 @@ class Button(RegistryBase):
         elif self.content is not None:
             content.append(self.content)
             
-        return Button(
-            *content,
+        if variant_config.content_wrapper:
+            content = variant_config.content_wrapper(self.content)
+            
+        return content
+
+    def __ft__(self) -> Any:
+        """Render the button component."""
+        return FastButton(
+            *self.prepare_content(),
             cls=self.get_classes(),
-            role="button",
             tabindex="0" if not self.disabled else "-1",
             aria_disabled="true" if self.disabled else None,
+            type="button"
         )
+
+# ============================================================================
+#  Button Variants
+# ============================================================================
+
+ButtonVariant = ComponentVariant
+
+# Built-in DaisyUI variants
+BUTTON_VARIANTS: Dict[str, ButtonVariant] = {
+    # DaisyUI variants - implicit daisy=True
+    "primary": ButtonVariant("btn-primary"),
+    "secondary": ButtonVariant("btn-secondary"),
+    "accent": ButtonVariant("btn-accent"),
+    "info": ButtonVariant("btn-info"),
+    "success": ButtonVariant("btn-success"),
+    "warning": ButtonVariant("btn-warning"),
+    "error": ButtonVariant("btn-error"),
+    
+    # Sizes
+    "xs": ButtonVariant("btn-xs"),
+    "sm": ButtonVariant("btn-sm"),
+    "lg": ButtonVariant("btn-lg"),
+    "xl": ButtonVariant("btn-xl"),
+    
+    # Styles
+    "outline": ButtonVariant("btn-outline"),
+    "ghost": ButtonVariant("btn-ghost"),
+    "link": ButtonVariant("btn-link"),
+    
+    # Common combinations
+    "sm-primary": ButtonVariant("btn-sm btn-primary"),
+    "lg-secondary-outline": ButtonVariant("btn-lg btn-secondary btn-outline"),
+    
+    # Custom variants - explicit daisy=False needed
+    "custom-purple": ButtonVariant(
+        "px-5 py-2.5 rounded font-medium text-white "
+        "bg-purple-500 hover:bg-purple-600 "
+        "transition-colors duration-200",
+        daisy=False
+    ),
+    
+    "simple-gradient": ButtonVariant(
+        "px-5 py-2.5 rounded font-medium text-white "
+        "bg-gradient-to-r from-purple-500 to-pink-500 "
+        "hover:from-purple-600 hover:to-pink-600 "
+        "transition-all duration-300 border-0",
+        daisy=False
+    ),
+}
+
+# Complex custom variants
+@variant("fancy-gradient",
+    "px-5 py-2.5 relative rounded group font-medium text-white inline-block",
+    daisy=False)
+def fancy_gradient(content):
+    """Complex button with custom structure."""
+    text = content[0] if isinstance(content, (list, tuple)) else content
+    return [
+        Span(cls="absolute top-0 left-0 w-full h-full rounded opacity-50 filter blur-sm bg-gradient-to-br from-purple-600 to-blue-500"),
+        Span(cls="h-full w-full inset-0 absolute mt-0.5 ml-0.5 bg-gradient-to-br filter group-active:opacity-0 rounded opacity-50 from-purple-600 to-blue-500"),
+        Span(cls="absolute inset-0 w-full h-full transition-all duration-200 ease-out rounded shadow-xl bg-gradient-to-br filter group-active:opacity-0 group-hover:blur-sm from-purple-600 to-blue-500"),
+        Span(cls="absolute inset-0 w-full h-full transition duration-200 ease-out rounded bg-gradient-to-br to-purple-600 from-blue-500"),
+        Span(text, cls="relative")
+    ]
+
+@variant("slide-overlay",
+    "relative inline-flex items-center justify-start inline-block px-5 py-3 overflow-hidden font-bold rounded-full group",
+    daisy=False)
+def slide_overlay(content):
+    """Create sliding overlay button structure."""
+    text = content[0] if isinstance(content, (list, tuple)) else content
+    return [
+        Span(cls="w-32 h-32 rotate-45 translate-x-12 -translate-y-2 absolute left-0 top-0 bg-white opacity-[3%]"),
+        Span(cls="absolute top-0 left-0 w-48 h-48 -mt-1 transition-all duration-500 ease-in-out rotate-45 -translate-x-56 -translate-y-24 bg-white opacity-100 group-hover:-translate-x-8"),
+        Span(text, cls="relative w-full text-left text-white transition-colors duration-200 ease-in-out group-hover:text-gray-900"),
+        Span(cls="absolute inset-0 border-2 border-white rounded-full")
+    ]
+

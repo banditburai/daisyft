@@ -25,6 +25,11 @@ def dev(
     input_css_path = Path(input_css) if input_css else Path(config.paths["css"]) / "input.css"
     output_css_path = Path(output_css) if output_css else Path(config.paths["css"]) / "output.css"
     
+    # Delete existing output.css if it exists
+    if output_css_path.exists():
+        output_css_path.unlink()
+        console.print("[bold]Cleaning existing CSS...[/bold]")
+    
     pm = ProcessManager()
     
     # Start Tailwind CSS watcher with process group
