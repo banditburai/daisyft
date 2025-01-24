@@ -89,11 +89,12 @@ class RegistryBase:
         target_dir = Path(cls.get_install_path(config))
         target_dir.mkdir(parents=True, exist_ok=True)
         
-        # Get the full source
-        source = inspect.getsource(cls)
-        lines = source.split('\n')
+        # Get the full module source instead of just the class
+        module = inspect.getmodule(cls)
+        with open(inspect.getfile(module), 'r') as f:
+            lines = f.readlines()
         
-        clean_source = []        
+        clean_source = []
         
         # Add docs if verbose
         if verbose and meta.detailed_docs:
@@ -116,14 +117,14 @@ class RegistryBase:
             if line.startswith('@Registry.'):
                 while i < len(lines) and not lines[i].strip().endswith(')'):
                     i += 1
-                i += 1  # Skip the closing parenthesis line
+                i += 1
                 continue
             
             # Skip DOCS variable and its content
             if line.startswith('DOCS = """'):
                 while i < len(lines) and not lines[i].strip().endswith('"""'):
                     i += 1
-                i += 1  # Skip the closing quotes line
+                i += 1
                 continue
             
             # Remove RegistryBase inheritance
