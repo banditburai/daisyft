@@ -224,7 +224,7 @@ def init(
             "static": options.static_dir,
             "css": options.static_dir / "css",
             "js": options.static_dir / "js",
-            "icons": options.static_dir / "icons",
+            "icons": "icons",
         })
     
     with Progress(

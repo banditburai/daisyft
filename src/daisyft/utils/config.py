@@ -76,7 +76,7 @@ class ProjectConfig:
         "static": Path("static"),
         "css": Path("static/css"),
         "js": Path("static/js"),
-        "icons": Path("static/icons")
+        "icons": Path("icons")
     })
     binary_metadata: Optional[BinaryMetadata] = None
     components: Dict[str, ComponentMetadata] = field(default_factory=dict)

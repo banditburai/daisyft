@@ -27,7 +27,7 @@ def mock_config(temp_project):
             "static": temp_project / "static",
             "css": temp_project / "static/css",
             "js": temp_project / "static/js",
-            "icons": temp_project / "static/icons"
+            "icons": temp_project / "icons"
         }
     )
     config_path = temp_project / "daisyft.conf.py"

@@ -120,7 +120,7 @@ def test_init_command_defaults(runner, tmp_path, mock_requests, mock_templates, 
     """Test init command with default options"""
     with runner.isolated_filesystem(temp_dir=tmp_path):
         # Create necessary directories first
-        for dir_path in ["components/ui", "static/css", "static/js", "static/icons"]:
+        for dir_path in ["components/ui", "static/css", "static/js", "icons"]:
             (tmp_path / dir_path).mkdir(parents=True, exist_ok=True)
             
         result = runner.invoke(app, ["init", "--defaults"])
@@ -133,7 +133,7 @@ def test_init_command_defaults(runner, tmp_path, mock_requests, mock_templates, 
         assert (tmp_path / "static").exists()
         assert (tmp_path / "static/css").exists()
         assert (tmp_path / "static/js").exists()
-        assert (tmp_path / "static/icons").exists()
+        assert (tmp_path / "icons").exists()
         
         # Just verify the template was called at least once
         assert mock_templates.called
@@ -167,7 +167,7 @@ def test_init_command_interactive(mock_text, mock_confirm, mock_checkbox, mock_s
     
     with runner.isolated_filesystem(temp_dir=tmp_path):
         # Create necessary directories first
-        for dir_path in ["components/ui", "static/css", "static/js", "static/icons"]:
+        for dir_path in ["components/ui", "static/css", "static/js", "icons"]:
             (tmp_path / dir_path).mkdir(parents=True, exist_ok=True)
             
         result = runner.invoke(app, ["init"])
