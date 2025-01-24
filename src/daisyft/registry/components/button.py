@@ -53,7 +53,6 @@ Available Modifiers:
     - circle: 1:1 aspect ratio with rounded corners
 
 Examples:
-    ```python
     # Basic button
     Button("Click me")
     
@@ -65,7 +64,6 @@ Examples:
     
     # Full width success button
     Button("Download", variant="success", modifier="block")
-    ```
 """
 
 @Registry.component(

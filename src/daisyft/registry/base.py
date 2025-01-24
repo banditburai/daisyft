@@ -4,6 +4,7 @@ from enum import Enum
 from typing import List, Optional, ClassVar, Type
 from pathlib import Path
 from ..utils.config import ProjectConfig
+import inspect
 
 @dataclass
 class TailwindConfig:
@@ -84,10 +85,41 @@ class RegistryBase:
     @classmethod
     def install(cls, config: ProjectConfig, force: bool = False, verbose: bool = True) -> bool:
         """Install this component into the project"""
-        from ..utils.install import install_component  # Move import here to avoid circular import
         meta = cls._registry_meta
+        target_dir = Path(cls.get_install_path(config))
+        target_dir.mkdir(parents=True, exist_ok=True)
         
-        # Install the component file
-        install_component(cls, config, verbose=verbose)
+        clean_source = []
+        
+        # Add detailed docs if verbose mode is on
+        if verbose and meta.detailed_docs:
+            # Format as a docstring
+            clean_source.append('"""')
+            clean_source.append(meta.detailed_docs.strip())
+            clean_source.append('"""')
+            clean_source.append("")  # Empty line after docs
+        
+        # Add imports
+        if meta.imports:
+            clean_source.extend(meta.imports)
+            clean_source.append("")  # Empty line after imports
+        
+        # Get the class source
+        source = inspect.getsource(cls)
+        lines = source.split('\n')
+        
+        # Find the class definition
+        for i, line in enumerate(lines):
+            if line.startswith('class '):
+                # Remove RegistryBase inheritance
+                class_def = line.replace('(RegistryBase)', '')
+                clean_source.append(class_def)
+                # Add everything after the class definition
+                clean_source.extend(lines[i+1:])
+                break
+        
+        # Write the file
+        target_path = target_dir / f"{meta.name}.py"
+        target_path.write_text('\n'.join(clean_source))
         
         return True 
