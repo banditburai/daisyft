@@ -110,11 +110,19 @@ class RegistryBase:
         module_source = inspect.getsource(module)
         class_source = inspect.getsource(cls)
         
-        # Get class body (remove decorator and class definition line)
+        # Get class body (skip decorator and get actual class content)
         class_lines = class_source.split('\n')
-        class_body = '\n'.join(line for line in class_lines 
-                              if not line.strip().startswith('@') 
-                              and not line.strip().startswith('class '))
+        in_class = False
+        class_body_lines = []
+        
+        for line in class_lines:
+            if line.strip().startswith('class '):
+                in_class = True
+                continue
+            if in_class and not line.strip().startswith('@'):
+                class_body_lines.append(line)
+        
+        class_body = '\n'.join(class_body_lines)
         
         # Get variants section if it exists
         variants_marker = f"#  {cls.__name__} Variants"

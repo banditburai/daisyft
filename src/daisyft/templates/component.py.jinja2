@@ -2,7 +2,6 @@
 """
 {{ docs }}
 """
-
 {% endif %}
 {%- for import_line in imports %}
 {{ import_line }}
@@ -11,7 +10,7 @@ from daisyft import ComponentVariant, variant
 
 @dataclass
 class {{ class_name }}:
-    {{ class_body | indent(4) }}
+    {{ class_body | indent(3) }}
 
 {%- if variants_source %}
 
