@@ -7,6 +7,7 @@ Shared utilities for creating component variants with DaisyUI support.
 
 from dataclasses import dataclass
 from typing import Optional, Callable, Dict, Any
+import sys
 
 @dataclass
 class ComponentVariant:
@@ -15,22 +16,40 @@ class ComponentVariant:
     content_wrapper: Optional[Callable] = None
     daisy: bool = True  # Defaults to True for dictionary variants
 
-def variant(name: str, classes: str, *, daisy: bool = False):  # Defaults to False for decorator variants
+def variant(variants_dict_name: str):
     """
-    Decorator to register complex component variants.
+    Create a variant decorator factory for a specific component.
     
     Args:
-        name: Identifier for the variant
-        classes: CSS classes to apply
-        daisy: Whether to include DaisyUI base classes
+        variants_dict_name: Name of the variants dictionary in the component module
+            (e.g., 'BUTTON_VARIANTS', 'CARD_VARIANTS', etc.)
     """
-    def decorator(func):
-        # The component needs to define its own VARIANTS dict
-        # This will be accessed through the component's module
-        func.__module__.VARIANTS[name] = ComponentVariant(
-            classes=classes,
-            content_wrapper=func,
-            daisy=daisy
-        )
-        return func
-    return decorator
+    def variant_decorator(name: str, classes: str, *, daisy: bool = False):
+        """
+        Decorator to register complex component variants.
+        
+        Args:
+            name: Identifier for the variant
+            classes: CSS classes to apply
+            daisy: Whether to include DaisyUI base classes
+        """
+        def decorator(func):
+            # Get the module where the decorated function is defined
+            module = sys.modules[func.__module__]
+            
+            # Ensure the module has the variants dict
+            if not hasattr(module, variants_dict_name):
+                setattr(module, variants_dict_name, {})
+            
+            # Get the variants dictionary
+            variants = getattr(module, variants_dict_name)
+            
+            # Register the variant
+            variants[name] = ComponentVariant(
+                classes=classes,
+                content_wrapper=func,
+                daisy=daisy
+            )
+            return func
+        return decorator
+    return variant_decorator

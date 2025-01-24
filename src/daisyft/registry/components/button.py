@@ -149,8 +149,10 @@ BUTTON_VARIANTS: Dict[str, ButtonVariant] = {
     ),
 }
 
+button = variant('BUTTON_VARIANTS')
+
 # Complex custom variants
-@variant("fancy-gradient",
+@button("fancy-gradient",
     "px-5 py-2.5 relative rounded group font-medium text-white inline-block",
     daisy=False)
 def fancy_gradient(content):
@@ -164,7 +166,7 @@ def fancy_gradient(content):
         Span(text, cls="relative")
     ]
 
-@variant("slide-overlay",
+@button("slide-overlay",
     "relative inline-flex items-center justify-start inline-block px-5 py-3 overflow-hidden font-bold rounded-full group",
     daisy=False)
 def slide_overlay(content):
