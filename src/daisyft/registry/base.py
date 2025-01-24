@@ -89,34 +89,50 @@ class RegistryBase:
         target_dir = Path(cls.get_install_path(config))
         target_dir.mkdir(parents=True, exist_ok=True)
         
-        clean_source = []
-        
-        # Add detailed docs if verbose mode is on
-        if verbose and meta.detailed_docs:
-            # Format as a docstring
-            clean_source.append('"""')
-            clean_source.append(meta.detailed_docs.strip())
-            clean_source.append('"""')
-            clean_source.append("")  # Empty line after docs
-        
-        # Add imports
-        if meta.imports:
-            clean_source.extend(meta.imports)
-            clean_source.append("")  # Empty line after imports
-        
-        # Get the class source
+        # Get the full source
         source = inspect.getsource(cls)
         lines = source.split('\n')
         
-        # Find the class definition
-        for i, line in enumerate(lines):
+        clean_source = []        
+        
+        # Add docs if verbose
+        if verbose and meta.detailed_docs:
+            clean_source.append('"""')
+            clean_source.append(meta.detailed_docs.strip())
+            clean_source.append('"""')
+            clean_source.append("")
+                
+        if meta.imports:
+            clean_source.extend(meta.imports)
+        clean_source.append("from daisyft import ComponentVariant, variant")
+        clean_source.append("")
+        
+        # Process the rest of the file
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Skip Registry decorator and its block
+            if line.startswith('@Registry.'):
+                while i < len(lines) and not lines[i].strip().endswith(')'):
+                    i += 1
+                i += 1  # Skip the closing parenthesis line
+                continue
+            
+            # Skip DOCS variable and its content
+            if line.startswith('DOCS = """'):
+                while i < len(lines) and not lines[i].strip().endswith('"""'):
+                    i += 1
+                i += 1  # Skip the closing quotes line
+                continue
+            
+            # Remove RegistryBase inheritance
             if line.startswith('class '):
-                # Remove RegistryBase inheritance
-                class_def = line.replace('(RegistryBase)', '')
-                clean_source.append(class_def)
-                # Add everything after the class definition
-                clean_source.extend(lines[i+1:])
-                break
+                clean_source.append(lines[i].replace('(RegistryBase)', ''))
+            else:
+                clean_source.append(lines[i])
+            
+            i += 1
         
         # Write the file
         target_path = target_dir / f"{meta.name}.py"

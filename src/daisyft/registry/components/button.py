@@ -38,9 +38,7 @@ Adding Variants:
     files=["button.py"],
     imports=[
         "from dataclasses import dataclass",
-        "from typing import Union, List, Any, Optional, Callable, Dict",
-        "from functools import partial",
-        "from daisyft import ComponentVariant, variant",
+        "from typing import Union, List, Any, Optional, Callable, Dict",        
         "from fasthtml.common import Button as FastButton, Span",
     ],
     detailed_docs=DOCS
