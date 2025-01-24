@@ -140,7 +140,7 @@ class RegistryBase:
             'class_name': cls.__name__,
             'class_body': class_body,
             'variants_source': variants_source,
-            'docs': meta.detailed_docs.strip() if verbose else None
+            'docs': meta.detailed_docs if verbose else None
         }
         
         # Render template
