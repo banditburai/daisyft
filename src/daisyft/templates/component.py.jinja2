@@ -1,0 +1,23 @@
+{%- if docs %}
+"""
+{{ docs }}
+"""
+
+{% endif %}
+{%- for import_line in imports %}
+{{ import_line }}
+{%- endfor %}
+from daisyft import ComponentVariant, variant
+
+@dataclass
+class {{ class_name }}:
+    {{ class_body | indent(4) }}
+
+{%- if variants_source %}
+
+# ============================================================================
+#  {{ class_name }} Variants
+# ============================================================================
+
+{{ variants_source }}
+{%- endif %} 

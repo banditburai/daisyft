@@ -5,6 +5,8 @@ from typing import List, Optional, ClassVar, Type
 from pathlib import Path
 from ..utils.config import ProjectConfig
 import inspect
+import jinja2
+import os
 
 @dataclass
 class TailwindConfig:
@@ -83,60 +85,57 @@ class RegistryBase:
         return config.paths["ui"]
 
     @classmethod
+    def get_template_path(cls) -> Path:
+        """Get the template path for this component"""
+        # Use generic component template
+        default_path = Path(__file__).parent.parent / "templates" / "component.py.jinja2"
+        if default_path.exists():
+            return default_path
+        
+        raise FileNotFoundError("Component template not found")
+
+    @classmethod
     def install(cls, config: ProjectConfig, force: bool = False, verbose: bool = True) -> bool:
         """Install this component into the project"""
         meta = cls._registry_meta
         target_dir = Path(cls.get_install_path(config))
         target_dir.mkdir(parents=True, exist_ok=True)
         
-        # Get the full module source instead of just the class
+        # Get template
+        template_path = cls.get_template_path()
+        template = jinja2.Template(template_path.read_text())
+        
+        # Extract component parts
         module = inspect.getmodule(cls)
-        with open(inspect.getfile(module), 'r') as f:
-            lines = f.readlines()
+        module_source = inspect.getsource(module)
+        class_source = inspect.getsource(cls)
         
-        clean_source = []
+        # Get class body (remove decorator and class definition line)
+        class_lines = class_source.split('\n')
+        class_body = '\n'.join(line for line in class_lines 
+                              if not line.strip().startswith('@') 
+                              and not line.strip().startswith('class '))
         
-        # Add docs if verbose
-        if verbose and meta.detailed_docs:
-            clean_source.append('"""')
-            clean_source.append(meta.detailed_docs.strip())
-            clean_source.append('"""')
-            clean_source.append("")
-                
-        if meta.imports:
-            clean_source.extend(meta.imports)
-        clean_source.append("from daisyft import ComponentVariant, variant")
-        clean_source.append("")
+        # Get variants section if it exists
+        variants_marker = f"#  {cls.__name__} Variants"
+        variants_source = module_source.split(variants_marker)[1].strip() if variants_marker in module_source else ""
         
-        # Process the rest of the file
-        i = 0
-        while i < len(lines):
-            line = lines[i].strip()
-            
-            # Skip Registry decorator and its block
-            if line.startswith('@Registry.'):
-                while i < len(lines) and not lines[i].strip().endswith(')'):
-                    i += 1
-                i += 1
-                continue
-            
-            # Skip DOCS variable and its content
-            if line.startswith('DOCS = """'):
-                while i < len(lines) and not lines[i].strip().endswith('"""'):
-                    i += 1
-                i += 1
-                continue
-            
-            # Remove RegistryBase inheritance
-            if line.startswith('class '):
-                clean_source.append(lines[i].replace('(RegistryBase)', ''))
-            else:
-                clean_source.append(lines[i])
-            
-            i += 1
+        # Prepare template context
+        context = {
+            'meta': meta,
+            'verbose': verbose,
+            'imports': meta.imports,
+            'class_name': cls.__name__,
+            'class_body': class_body,
+            'variants_source': variants_source,
+            'docs': meta.detailed_docs if verbose else None
+        }
         
-        # Write the file
+        # Render template
+        content = template.render(**context)
+        
+        # Write file
         target_path = target_dir / f"{meta.name}.py"
-        target_path.write_text('\n'.join(clean_source))
+        target_path.write_text(content)
         
         return True 
