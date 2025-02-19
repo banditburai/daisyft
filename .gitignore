@@ -8,4 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
-PARALLAXITY_EXAMPLE.md
+scratchpad/
+.pytest_cache/
+tests/
+.DS_Store
