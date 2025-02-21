@@ -1,84 +1,16 @@
 from dataclasses import dataclass
 from pathlib import Path
-import typer
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from typing import Optional, Dict, Any
 import questionary
-from typing import Optional
-import subprocess
-import requests
-import stat
-from platform import system
 from questionary import Choice
-from ..utils.console import console 
-from ..utils.config import ProjectConfig, TailwindReleaseInfo
-from ..utils.templates import render_template
-from ..utils.package import PackageManager
-from ..registry.decorators import Registry, RegistryType
+import typer
+from jinja2 import TemplateError
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
-def get_release_info(style: str = "daisy") -> dict:
-    """Get latest release info from GitHub"""
-    url = TailwindReleaseInfo.get_api_url(style)
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
-
-def download_tailwind_binary(config: ProjectConfig, force: bool = False) -> Path:
-    """Download the appropriate Tailwind binary"""
-    binary_path = Path("tailwindcss" + (".exe" if system().lower() == "windows" else ""))
-    
-    try:
-        release_info = get_release_info(config.style)
-        
-        if binary_path.exists() and not force and config.binary_metadata:
-            # Check if we need to update
-            if config.binary_metadata.style == config.style:
-                current_version = config.binary_metadata.version
-                latest_version = release_info.get('tag_name')
-                
-                if current_version == latest_version:
-                    console.print(f"[green]✓[/green] Tailwind binary is up to date ({current_version})")
-                    return binary_path
-                
-                if not typer.confirm(
-                    f"\nNew version available: {latest_version} (current: {current_version})\nDownload update?",
-                    default=True
-                ):
-                    return binary_path
-            else:
-                if not typer.confirm(
-                    f"\nExisting binary is for {config.binary_metadata.style} style, "
-                    f"but {config.style} style is requested. Download new version?",
-                    default=True
-                ):
-                    return binary_path
-    except Exception as e:
-        console.print(f"[yellow]Warning:[/yellow] Could not check for updates: {e}")
-        if binary_path.exists() and not force:
-            return binary_path
-    
-    base_url = TailwindReleaseInfo.get_download_url(config.style)
-    url = f"{base_url}{config.tailwind_binary_name}"
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    
-    # Download to original name first
-    temp_path = Path(config.tailwind_binary_name)
-    temp_path.write_bytes(response.content)
-    
-    # Rename to tailwindcss
-    if binary_path.exists():
-        binary_path.unlink()
-    temp_path.rename(binary_path)
-    
-    # Make binary executable (skip on Windows)
-    if system().lower() != "windows":
-        binary_path.chmod(binary_path.stat().st_mode | stat.S_IEXEC)
-    
-    # Update config with new binary metadata
-    config.update_binary_metadata(release_info)
-    
-    return binary_path
+from ..utils.config import ProjectConfig
+from ..utils.console import console
+from ..utils.downloader import download_tailwind_binary
+from ..utils.template import render_template, TemplateContext
 
 @dataclass
 class InitOptions:
@@ -91,109 +23,110 @@ class InitOptions:
     static_dir: Path = Path("static")
     verbose: bool = True
 
+def handle_style_prompt(answers: Dict[str, Any]) -> None:
+    answers["style"] = questionary.select(
+        "Style:",
+        choices=[
+            Choice("daisy", "Use DaisyUI components (recommended)"),
+            Choice("vanilla", "Use vanilla Tailwind CSS")
+        ],
+        default="daisy"
+    ).ask()
+
+def handle_theme_prompt(answers: Dict[str, Any]) -> None:
+    if answers["style"] != "daisy":
+        return
+    
+    answers["theme"] = questionary.select(
+        "Theme:",
+        choices=[
+            Choice("dark", "Dark mode (default)"),
+            Choice("light", "Light mode"),
+            Choice("cupcake", "Light and playful"),
+            Choice("corporate", "Professional and clean"),
+        ],
+        default="dark"
+    ).ask()
+
+QUESTION_HANDLERS = {
+    "style": handle_style_prompt,
+    "theme": handle_theme_prompt,
+    "app_path": lambda a: a.update({"app_path": 
+        questionary.text("FastHTML app entry point:", default="main.py").ask()
+    }),
+    "include_icons": lambda a: a.update({"include_icons": 
+        questionary.confirm("Include ft-icons package?", default=True).ask()
+    }),
+    "components_dir": lambda a: a.update({"components_dir": 
+        questionary.text("Components directory:", default="components").ask()
+    }),
+    "static_dir": lambda a: a.update({"static_dir": 
+        questionary.text("Static assets directory:", default="static").ask()
+    }),
+    "verbose": lambda a: a.update({"verbose": 
+        questionary.confirm("Include detailed documentation?", default=True).ask()
+    })
+}
+
 def get_user_options(defaults: bool = False) -> InitOptions:
-    """Get project options either from user input or defaults"""
+    """Get project options through interactive prompts or defaults"""
     if defaults:
         return InitOptions()
-    
-    default_options = {
-        "style": ("daisy", "Choose between DaisyUI components or vanilla Tailwind"),
-        "theme": ("dark", "Select a theme for your application"),
-        "app_path": ("main.py", "Entry point for your FastHTML application"),
-        "include_icons": (True, "Include ft-icons package for SVG icon components"),
-        "components_dir": ("components", "Directory where your UI components will be stored"),
-        "static_dir": ("static", "Directory for CSS, JavaScript, and other static assets"),
-        "verbose": (True, "Include detailed documentation in component files")
+
+    console.print("\n[bold]Project Configuration:[/bold]")
+    console.print("[dim]Use arrow keys to navigate, space to select options to customize[/dim]\n")
+
+    answers = {
+        "style": "daisy",
+        "theme": "dark",
+        "app_path": "main.py",
+        "include_icons": True,
+        "components_dir": "components",
+        "static_dir": "static",
+        "verbose": True
     }
-    
-    # Show current configuration
-    console.print("\n[bold]Default configuration:[/bold]")
-    for key, (value, desc) in default_options.items():
-        if key != "theme" or default_options["style"][0] == "daisy":
-            console.print(f"  [green]{key}:[/green] {value}")
-            console.print(f"    [dim]{desc}[/dim]")
-    
-    console.print("\n[dim]Use arrow keys to move, space to select options to customize[/dim]")
-    
-    # Start with defaults
-    answers = {k: v for k, (v, _) in default_options.items()}
-    
-    to_change = questionary.checkbox(
-        "Which options would you like to customize?",
-        choices=[
-            Choice(
-                title=f"{key}",
-                value=key,
-                disabled=key == "theme" and default_options["style"][0] != "daisy"
-            )
-            for key, (_, _) in default_options.items()
-        ]
-    ).ask()
-    
-    # Only prompt for selected options
-    if "style" in to_change:
-        answers["style"] = questionary.select(
-            "Style:",
+
+    try:
+        selected = questionary.checkbox(
+            "Which options would you like to customize?",
             choices=[
-                Choice("daisy", "Use DaisyUI components (recommended)"),
-                Choice("vanilla", "Use vanilla Tailwind CSS")
-            ],
-            default="daisy"
+                Choice(
+                    title=key,
+                    value=key,
+                    disabled=key == "theme" and answers["style"] != "daisy"
+                ) for key in QUESTION_HANDLERS.keys()
+            ]
         ).ask()
-    
-    if "theme" in to_change:
-        theme_question = questionary.select(
-            "Theme:",
-            choices=[
-                Choice("dark", "Dark mode (default)"),
-                Choice("light", "Light mode"),
-                Choice("cupcake", "Light and playful"),
-                Choice("corporate", "Professional and clean"),
-                # ... other themes with descriptions ...
-            ],
-            default="dark"
-        ).skip_if(lambda x: answers["style"] != "daisy", default="dark")
-        answers["theme"] = theme_question.ask()
-    
-    if "app_path" in to_change:
-        answers["app_path"] = questionary.text(
-            "FastHTML app entry point:",
-            default="main.py"
-        ).ask()
-    
-    if "include_icons" in to_change:
-        answers["include_icons"] = questionary.confirm(
-            "Include ft-icons package?",
-            default=True
-        ).ask()
-    
-    if "components_dir" in to_change:
-        answers["components_dir"] = questionary.text(
-            "Components directory:",
-            default="components"
-        ).ask()
-    
-    if "static_dir" in to_change:
-        answers["static_dir"] = questionary.text(
-            "Static assets directory:",
-            default="static"
-        ).ask()
-    
-    if "verbose" in to_change:
-        answers["verbose"] = questionary.confirm(
-            "Include detailed documentation in component files?",
-            default=True
-        ).ask()
-    
-    return InitOptions(
-        style=answers["style"],
-        theme=answers["theme"],
-        app_path=Path(answers["app_path"]),
-        include_icons=answers["include_icons"],
-        components_dir=Path(answers["components_dir"]),
-        static_dir=Path(answers["static_dir"]),
-        verbose=answers["verbose"]
-    )
+
+        for key in selected:
+            QUESTION_HANDLERS[key](answers)
+
+        return InitOptions(
+            style=answers["style"],
+            theme=answers["theme"],
+            app_path=Path(answers["app_path"]),
+            include_icons=answers["include_icons"],
+            components_dir=Path(answers["components_dir"]),
+            static_dir=Path(answers["static_dir"]),
+            verbose=answers["verbose"]
+        )
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Initialization cancelled[/yellow]")
+        raise typer.Exit(1)
+
+def safe_create_directories(path: Path) -> None:
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        console.print(f"[red]Error creating directory {path}:[/red] {e}")
+        raise typer.Exit(1)
+
+def render_template_safe(template_name: str, output_path: Path, context: TemplateContext) -> None:
+    try:
+        render_template(template_name, output_path, context)
+    except (TemplateError, OSError) as e:
+        console.print(f"[red]Error rendering {template_name}:[/red] {e}")
+        raise typer.Exit(1)
 
 def init(
     path: str = typer.Option(".", help="Project path"),
@@ -204,94 +137,70 @@ def init(
 ) -> None:
     """Initialize a new ft-daisy project"""
     project_path = Path(path).absolute()
-    project_path.mkdir(parents=True, exist_ok=True)
-    
-    # Load or create config
-    config = ProjectConfig.load(project_path / "daisyft.conf.py")
-    config_exists = config.is_initialized
-    
-    # Get project settings
-    if not config_exists and not defaults:
-        options = get_user_options()
-        config.style = options.style
-        config.theme = options.theme
-        config.app_path = options.app_path
-        config.include_icons = options.include_icons
-        config.verbose = options.verbose
-        config.paths.update({
-            "components": options.components_dir,
-            "ui": options.components_dir / "ui",
-            "static": options.static_dir,
-            "css": options.static_dir / "css",
-            "js": options.static_dir / "js",
-            "icons": "icons",
-        })
-    
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console
-    ) as progress:
-        task = progress.add_task("", total=100)
-        
-        # Create project structure
-        if not config_exists:
-            progress.update(task, description="Creating project structure...")
-            for path in config.paths.values():
-                (project_path / path).mkdir(parents=True, exist_ok=True)
-            
-            # Generate initial files
-            render_template(
-                "input.css.jinja2",
-                project_path / config.paths["css"] / "input.css",
-                style=config.style,
-                components={}  # Add empty components dict for initial setup
-            )
-                        
-            # Generate main app
-            render_template(
-                "main.py.jinja2",
-                project_path / config.app_path,
-                style=config.style,
-                theme=config.theme,
-                paths=config.paths,
-                port=config.port,
-                live=config.live,
-                host=config.host
-            )
-            
-            progress.update(task, advance=50)
-        
-        # Always check/update Tailwind binary
-        progress.update(task, description="Checking Tailwind binary...")
-        try:
-            download_tailwind_binary(config, force=force)
-            progress.update(task, advance=25)
-        except Exception as e:
-            console.print(f"[yellow]Warning:[/yellow] Could not download Tailwind binary: {e}")
-        
-        # Save config
-        config.save(project_path / "daisyft.conf.py")
-        
-        # Install ft-icons if requested
-        if config.include_icons and not config_exists:
-            progress.update(task, description="Installing ft-icons...")
-            try:
-                PackageManager.install(
-                    "git+https://github.com/banditburai/ft-icon.git",
-                    manager=package_manager
-                )
-            except Exception as e:
-                console.print(f"[yellow]Warning:[/yellow] Could not install ft-icons: {e}")
-                console.print("You can install it manually later with your package manager of choice.")
-            
-            progress.update(task, advance=25)
+    config_path = project_path / "daisyft.conf.py"
 
-    if config_exists:
-        console.print("\n[green]✓[/green] Tailwind binary updated successfully!")
-    else:
-        console.print("\n[green]✓[/green] Project initialized successfully!")
-        console.print("\nNext steps:")
-        console.print("  1. Add components with [bold]daisyft add[/bold]")
-        console.print("  2. Configure Tailwind in [bold]daisyft.conf.py[/bold]")
-        console.print("  3. Run [bold]daisyft dev[/bold] to start development server") 
+    try:
+        project_path.mkdir(parents=True, exist_ok=True)
+        config = ProjectConfig.load(config_path)
+        config_exists = config.is_initialized
+
+        if not config_exists and not defaults:
+            options = get_user_options()
+            config.update_from_options(options)
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("Initializing project...", total=100)
+
+            if not config_exists:
+                progress.update(task, description="Creating directories...")
+                for path in config.paths.values():
+                    safe_create_directories(project_path / path)
+
+                progress.update(task, advance=30, description="Generating files...")
+                render_template_safe(
+                    "input.css.jinja2",
+                    project_path / config.paths["css"] / "input.css",
+                    {"style": config.style, "components": {}}
+                )
+
+                render_template_safe(
+                    "main.py.jinja2",
+                    project_path / config.app_path,
+                    {
+                        "style": config.style,
+                        "theme": config.theme,
+                        "paths": config.paths,
+                        "port": config.port,
+                        "live": config.live,
+                        "host": config.host
+                    }
+                )
+                progress.update(task, advance=40)
+
+            progress.update(task, description="Downloading Tailwind...")
+            try:
+                binary_path = download_tailwind_binary(config, force=force)
+                if not binary_path.exists():
+                    raise typer.Exit(1)
+                progress.update(task, advance=20)
+            except Exception as e:
+                console.print(f"[yellow]Warning:[/yellow] Binary download failed - {e}")
+                progress.update(task, advance=20)
+
+            config.save(config_path)
+            progress.update(task, advance=10)
+
+        console.print("\n[green]✓ Project initialized successfully![/green]")
+        if not config_exists:
+            console.print("\nNext steps:")
+            console.print("  1. Add components with [bold]daisyft add[/bold]")
+            console.print("  2. Configure Tailwind in [bold]daisyft.conf.py[/bold]")
+            console.print("  3. Run [bold]daisyft dev[/bold] to start development server")
+
+    except (OSError, PermissionError) as e:
+        console.print(f"[red]Fatal error:[/red] {e}")
+        raise typer.Exit(1)

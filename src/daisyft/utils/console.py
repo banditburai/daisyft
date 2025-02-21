@@ -10,5 +10,5 @@ theme = Theme({
     "command": "bold cyan",
 })
 
-# Create shared console instance
-console = Console(theme=theme) 
+# Create properly configured console instance
+console = Console(theme=theme, force_terminal=True)

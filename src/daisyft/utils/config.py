@@ -11,13 +11,15 @@ from datetime import datetime
 from functools import cached_property
 from .templates import render_template
 import typer
+import sys
+import platform
 
 @dataclass(frozen=True)
 class TailwindReleaseInfo:
     """Release information for Tailwind binaries"""
     DAISY_REPO = "banditburai/fastwindcss"
     VANILLA_REPO = "tailwindlabs/tailwindcss"
-    VANILLA_VERSION = "v4.0.0-beta.9"  # Will change to "latest" when stable
+    VANILLA_VERSION = "latest"  # Will change to "latest" when stable
 
     @classmethod
     def get_api_url(cls, style: Literal["daisy", "vanilla"]) -> str:
@@ -36,20 +38,19 @@ class TailwindReleaseInfo:
 @dataclass
 class BinaryMetadata:
     """Metadata for Tailwind binary"""
-    style: Literal["daisy", "vanilla"]
     version: str
-    downloaded_at: datetime
-    sha: str
-    release_id: int
+    path: Path
+
+    def __post_init__(self):
+        """Ensure path is a Path object"""
+        if isinstance(self.path, str):
+            self.path = Path(self.path)
 
     @classmethod
     def from_release_info(cls, release_info: dict, style: str) -> "BinaryMetadata":
         return cls(
-            style=style,
             version=release_info.get("tag_name", "unknown"),
-            downloaded_at=datetime.now(),
-            sha=release_info.get("sha", "unknown"),
-            release_id=release_info.get("id", 0)
+            path=Path(release_info.get("url", "unknown").split("/")[-1])
         )
 
 @dataclass
@@ -80,13 +81,23 @@ class ProjectConfig:
     })
     binary_metadata: Optional[BinaryMetadata] = None
     components: Dict[str, ComponentMetadata] = field(default_factory=dict)
+    binary_path: Path = field(default_factory=lambda: Path(
+        sys.prefix) / "bin" / ProjectConfig.tailwind_binary_name
+    )
     
     def __post_init__(self):
-        """Convert any string paths to Path objects"""
-        if isinstance(self.app_path, str):
-            self.app_path = Path(self.app_path)
-        self.paths = {k: Path(v) if isinstance(v, str) else v 
-                     for k, v in self.paths.items()}
+        """Ensure all paths are absolute"""
+        self.binary_path = self.binary_path.absolute()
+        
+        # Make all stored paths absolute
+        self.app_path = self.app_path.absolute()
+        for key in self.paths:
+            if isinstance(self.paths[key], Path):
+                self.paths[key] = self.paths[key].absolute()
+
+        """Ensure binary path exists after initialization"""
+        if not self.binary_path.exists():
+            raise ValueError(f"Binary path {self.binary_path} does not exist")
 
     @classmethod
     def load(cls, path: Path = Path("daisyft.conf.py")) -> "ProjectConfig":
@@ -101,40 +112,29 @@ class ProjectConfig:
         return getattr(module, "config", cls())
 
     def save(self, path: Path = Path("daisyft.conf.py")) -> None:
-        """Save config as a Python file using template"""
-        render_template(
-            "daisyft.conf.py.jinja2",
-            path,
-            style=self.style,
-            theme=self.theme,
-            app_path=self.app_path,
-            paths=self.paths,
-            binary_metadata=self.binary_metadata,
-            port=self.port,
-            live=self.live,
-            host=self.host,
-            include_icons=self.include_icons,
-            verbose=self.verbose, 
-            components=self.components
-        )
+        """Ensure binary_metadata is always defined"""
+        context = {
+            "binary_metadata": self.binary_metadata or None,
+            "style": self.style,
+            "theme": self.theme,
+            "app_path": self.app_path,
+            "paths": self.paths,
+            "port": self.port,
+            "live": self.live,
+            "host": self.host,
+            "include_icons": self.include_icons,
+            "verbose": self.verbose,
+            "components": self.components
+        }
+        render_template("daisyft.conf.py.jinja2", path, **context)
 
     def update_binary_metadata(self, release_info: dict) -> None:
         """Update binary metadata from release info"""
-        self.binary_metadata = BinaryMetadata.from_release_info(release_info, self.style)
+        self.binary_metadata = BinaryMetadata(
+            version=release_info['tag_name'],
+            path=self.binary_path  # Use configured path
+        )
         self.save()
-
-    @cached_property
-    def tailwind_binary_name(self) -> str:
-        """Get the appropriate Tailwind binary name for the current system"""
-        os_name = system().lower()
-        arch = machine().lower()
-        
-        if os_name == "darwin":
-            return f"tailwindcss-macos-{'arm64' if arch == 'arm64' else 'x64'}"
-        elif os_name == "linux":
-            return f"tailwindcss-linux-{'arm64' if arch == 'aarch64' else 'x64'}"
-        else:
-            return "tailwindcss-windows-x64.exe"
 
     @property
     def is_initialized(self) -> bool:
@@ -170,3 +170,18 @@ class ProjectConfig:
         if comp := self.components.get(name):
             return comp.path
         return None 
+
+    @cached_property
+    def tailwind_binary_name(self) -> str:
+        return self.get_tailwind_binary_name()
+
+    @staticmethod
+    def get_tailwind_binary_name() -> str:
+        system = platform.system().lower()
+        arch = platform.machine().lower()
+        
+        if system == "darwin":
+            return f"tailwindcss-macos-{'arm64' if arch == 'arm64' else 'x64'}"
+        elif system == "linux":
+            return f"tailwindcss-linux-{'arm64' if arch == 'aarch64' else 'x64'}"
+        return "tailwindcss-windows-x64.exe" 

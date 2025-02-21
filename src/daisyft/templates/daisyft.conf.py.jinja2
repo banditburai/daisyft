@@ -1,7 +1,10 @@
 {# Configuration file template for daisyft projects #}
+{% set binary_metadata = binary_metadata if binary_metadata is defined else None %}
+
 from pathlib import Path
 from datetime import datetime
-from daisyft import ProjectConfig, BinaryMetadata, ComponentMetadata
+from daisyft.utils.config import ProjectConfig, BinaryMetadata, ComponentMetadata
+import sys
 
 # Note: After changing settings like port/host/live, run 'daisyft sync' 
 # to update your main.py with the new values
@@ -23,17 +26,15 @@ config = ProjectConfig(
         "js": Path("{{ paths.js }}"),
         "icons": Path("{{ paths.icons }}"),
     },
-    {% if binary_metadata %}
     binary_metadata=BinaryMetadata(
-        style="{{ binary_metadata.style }}",
-        version="{{ binary_metadata.version }}",
-        downloaded_at=datetime.fromisoformat("{{ binary_metadata.downloaded_at.isoformat() }}"),
-        sha="{{ binary_metadata.sha }}",
-        release_id={{ binary_metadata.release_id }}
+        version={{ binary_metadata.version|tojson }},
+        path=Path({{ binary_metadata.path.absolute().as_posix()|tojson }})
+    ) if binary_metadata else (
+        BinaryMetadata(
+            version="",
+            path=Path({{ (Path(sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name()).absolute().as_posix()|tojson }})
+        ) if binary_metadata is None else None
     ),
-    {% else %}
-    binary_metadata=None,
-    {% endif %}
     components={
         {% for name, comp in components.items() %}
         "{{ name }}": ComponentMetadata(

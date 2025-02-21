@@ -4,7 +4,6 @@ import subprocess
 import os
 import sys
 import time
-from rich.console import Console
 from ..utils.config import ProjectConfig
 from ..utils.process import ProcessManager
 from ..utils.console import console

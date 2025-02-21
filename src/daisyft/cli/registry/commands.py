@@ -1,15 +1,12 @@
 import typer
 from pathlib import Path
-from rich.console import Console
 from ...utils.config import ProjectConfig
-
+from ...utils.console import console
 registry_app = typer.Typer(
     name="registry",
     help="Registry management commands",
     no_args_is_help=True
 )
-
-console = Console()
 
 @registry_app.command()
 def build(

@@ -4,7 +4,6 @@ import subprocess
 import os
 import sys
 import time
-from rich.console import Console
 from ..utils.config import ProjectConfig
 from ..utils.process import ProcessManager
 from ..utils.console import console
@@ -34,9 +33,16 @@ def run(
     
     # Build CSS first
     console.print("[bold]Building CSS...[/bold]")
+    binary_path = config.binary_path
+    if not binary_path.exists():
+        console.print(f"[red]Error:[/red] Tailwind binary missing at {binary_path}")
+        console.print("Please run [bold]daisyft init --force[/bold] to download it")
+        raise typer.Exit(1)
+            
     try:
+        console.print(f"Using Tailwind binary at: {binary_path}")
         subprocess.run([
-            "./tailwindcss",
+            str(binary_path.absolute()),
             "-i", str(input_css_path),
             "-o", str(output_css_path),
             "--minify"

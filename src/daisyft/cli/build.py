@@ -1,7 +1,6 @@
 import typer
 from pathlib import Path
 import subprocess
-from rich.console import Console
 from ..utils.config import ProjectConfig
 from ..utils.console import console  
 

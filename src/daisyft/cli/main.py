@@ -1,5 +1,4 @@
 import typer
-from rich.console import Console
 from pathlib import Path
 from typing import Optional, List
 from daisyft.cli import init, add, config, build, dev, run, sync

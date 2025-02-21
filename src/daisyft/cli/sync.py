@@ -1,5 +1,4 @@
 import typer
-from rich.console import Console
 from pathlib import Path
 from typing import Optional
 from ..utils.config import ProjectConfig

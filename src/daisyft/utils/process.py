@@ -1,11 +1,7 @@
 import signal
-import sys
 import subprocess
 import os
-import time
-from rich.console import Console
-
-console = Console()
+from ..utils.console import console
 
 class ProcessManager:
     """Manage multiple subprocesses cleanly"""
