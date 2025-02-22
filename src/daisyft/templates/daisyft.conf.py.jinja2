@@ -1,5 +1,5 @@
 {# Configuration file template for daisyft projects #}
-{% set binary_metadata = binary_metadata if binary_metadata is defined else None %}
+{% set binary_metadata = binary_metadata|default(None) %}
 
 from pathlib import Path
 from datetime import datetime
@@ -27,12 +27,14 @@ config = ProjectConfig(
         "icons": Path("{{ paths.icons }}"),
     },
     binary_metadata=(
+        {% if binary_metadata and binary_metadata.path %}
         BinaryMetadata(
             version="{{ binary_metadata.version }}",
             path=Path({{ binary_metadata.path.as_posix()|tojson }})
         )
-        if binary_metadata and binary_metadata.path.exists()
-        else None
+        {% else %}
+        None
+        {% endif %}
     ),
     components={
         {% for name, comp in components.items() %}
