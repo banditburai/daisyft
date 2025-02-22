@@ -13,11 +13,11 @@ config = ProjectConfig(
     style="{{ config.style }}",
     theme="{{ config.theme }}",
     app_path=Path("{{ config.app_path }}"),
-    include_icons={{ config.include_icons|lower }},
-    verbose={{ config.verbose|lower }},
+    include_icons={{ 'True' if config.include_icons else 'False' }},
+    verbose={{ 'True' if config.verbose else 'False' }},
     host="{{ config.host }}",
     port={{ config.port }},
-    live={{ config.live|lower }},
+    live={{ 'True' if config.live else 'False' }},
     paths={
         {% for key, path in config.paths.items() %}
         "{{ key }}": Path("{{ path }}"),
