@@ -3,7 +3,7 @@ import platform
 import requests
 from pathlib import Path
 from typing import Literal, Optional
-from rich.progress import Progress, BarColumn, DownloadColumn, TimeRemainingColumn
+from rich.progress import Progress, BarColumn, DownloadColumn, TimeRemainingColumn, TextColumn
 from .config import TailwindReleaseInfo, ProjectConfig, get_bin_dir
 from .console import console
 import typer
@@ -55,11 +55,13 @@ def _core_download(url: str, dest: Path, show_progress: bool) -> None:
 
     if show_progress:
         with Progress(
-            BarColumn(complete_style="success", finished_style="success.bold"),
+            BarColumn(complete_style="success"),
+            TextColumn("[progress.description]{task.description}", style="info"),
             "[progress.percentage]{task.percentage:>3.0f}%",
             DownloadColumn(),
             TimeRemainingColumn(),
-            console=console
+            console=console,
+            refresh_per_second=30,
         ) as progress:
             task = progress.add_task("Downloading", total=int(response.headers.get("content-length", 0)))
             _write_content(response, dest, lambda len: progress.update(task, advance=len))

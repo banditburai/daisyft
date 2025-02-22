@@ -8,6 +8,10 @@ theme = Theme({
     "error": "red bold",
     "success": "green",
     "command": "bold cyan",
+    # Add progress-specific styles
+    "progress.description": "info",
+    "progress.data.speed": "green",
+    "progress.download": "green",
 })
 
 # Create properly configured console instance
