@@ -9,7 +9,7 @@ theme = Theme({
     "success": "green",
     "command": "bold cyan",
     # Add progress-specific styles
-    "progress.description": "info",
+    "progress.description": "cyan",
     "progress.data.speed": "green",
     "progress.download": "green",
 })
