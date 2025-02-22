@@ -40,7 +40,7 @@ def run(
         raise typer.Exit(1)
             
     try:
-        console.print(f"Using Tailwind binary at: {binary_path}")
+        console.print(f"Resolved binary path: [dim]{binary_path}[/dim] (exists: {binary_path.exists()})")
         subprocess.run([
             str(binary_path.absolute()),
             "-i", str(input_css_path),

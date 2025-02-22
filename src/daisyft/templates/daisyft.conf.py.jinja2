@@ -27,14 +27,9 @@ config = ProjectConfig(
         "icons": Path("{{ paths.icons }}"),
     },
     binary_metadata=(
-        {% if binary_metadata and binary_metadata.path %}
-        BinaryMetadata(
-            version="{{ binary_metadata.version }}",
-            path=Path({{ binary_metadata.path.as_posix()|tojson }})
-        )
-        {% else %}
-        None
-        {% endif %}
+        BinaryMetadata(version="{{ binary_metadata.version }}")
+        if binary_metadata
+        else None
     ),
     components={
         {% for name, comp in components.items() %}

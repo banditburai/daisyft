@@ -47,19 +47,12 @@ class TailwindReleaseInfo:
 @dataclass
 class BinaryMetadata:
     """Metadata for Tailwind binary"""
-    version: str
-    path: Path
-
-    def __post_init__(self):
-        """Ensure path is a Path object"""
-        if isinstance(self.path, str):
-            self.path = Path(self.path)
+    version: str  # Only store version
 
     @classmethod
     def from_release_info(cls, release_info: dict, style: str) -> "BinaryMetadata":
         return cls(
             version=release_info.get("tag_name", "unknown"),
-            path=Path(release_info.get("url", "unknown").split("/")[-1])
         )
 
 @dataclass
@@ -90,9 +83,6 @@ class ProjectConfig:
     })
     binary_metadata: Optional[BinaryMetadata] = None
     components: Dict[str, ComponentMetadata] = field(default_factory=dict)
-    binary_path: Path = field(default_factory=lambda: Path(
-        sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name()
-    )
     
     def __post_init__(self):
         """Post-initialization checks"""
@@ -101,14 +91,15 @@ class ProjectConfig:
             raise ValueError(f"Binary path {self.binary_path} does not exist")
         
         """Ensure all paths are absolute"""
-        self.binary_path = self.binary_path.absolute()
-        
-        # Make all stored paths absolute
-        self.app_path = self.app_path.absolute()
         for key in self.paths:
             if isinstance(self.paths[key], Path):
                 self.paths[key] = self.paths[key].absolute()
-
+    
+    @property
+    def binary_path(self) -> Path:
+        """Dynamically resolve binary path relative to current environment"""
+        return (Path(sys.prefix) / "bin" / self.get_tailwind_binary_name()).resolve()
+    
     @classmethod
     def load(cls, path: Path = Path("daisyft.conf.py")) -> "ProjectConfig":
         """Load config from a Python file"""
@@ -124,7 +115,9 @@ class ProjectConfig:
     def save(self, path: Path = Path("daisyft.conf.py")) -> None:
         """Save config to a Python file"""
         context = {
-            "binary_metadata": self.binary_metadata,
+            # Only pass version if metadata exists
+            "binary_metadata": BinaryMetadata(version=self.binary_metadata.version) 
+                if self.binary_metadata else None,
             "style": self.style,
             "theme": self.theme,
             "app_path": self.app_path,
@@ -144,8 +137,7 @@ class ProjectConfig:
     def update_binary_metadata(self, release_info: dict) -> None:
         """Update binary metadata from release info"""
         self.binary_metadata = BinaryMetadata(
-            version=release_info['tag_name'],
-            path=self.binary_path  # Use configured path
+            version=release_info['tag_name'],            
         )
         self.save()
 
@@ -210,6 +202,8 @@ class ProjectConfig:
             "js": options.static_dir / "js",
             "icons": options.static_dir / "icons" if options.include_icons else Path("_disabled")
         }
+
+
 
 PlatformName = Literal["macos", "linux", "windows"]
 Architecture = Literal["x64", "arm64"]
