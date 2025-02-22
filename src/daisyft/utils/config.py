@@ -12,6 +12,7 @@ import typer
 import sys
 import platform
 import sysconfig
+from ..cli.init import InitOptions
 @dataclass(frozen=True)
 class TailwindReleaseInfo:
     """Release information for Tailwind binaries"""
@@ -179,6 +180,24 @@ class ProjectConfig:
             return f"tailwindcss-linux-{architecture}"
         return "tailwindcss-windows-x64.exe" 
     
+    def update_from_options(self, options: InitOptions) -> None:
+        """Update config from initialization options"""
+        self.style = options.style
+        self.theme = options.theme
+        self.app_path = options.app_path
+        self.include_icons = options.include_icons
+        self.verbose = options.verbose
+        
+        # Update paths
+        self.paths = {
+            "components": options.components_dir,
+            "ui": options.components_dir / "ui",
+            "static": options.static_dir,
+            "css": options.static_dir / "css",
+            "js": options.static_dir / "js",
+            "icons": options.static_dir / "icons" if options.include_icons else Path("_disabled")
+        }
+
 from platform import system, machine
 from typing import Literal
 
