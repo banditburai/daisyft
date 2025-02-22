@@ -4,9 +4,8 @@ import requests
 from pathlib import Path
 from typing import Literal, Optional
 from rich.progress import Progress, BarColumn, DownloadColumn, TimeRemainingColumn
-from .config import TailwindReleaseInfo, ProjectConfig
+from .config import TailwindReleaseInfo, ProjectConfig, get_bin_dir
 from .console import console
-from .paths import get_bin_dir
 import typer
 import sys
 

@@ -7,13 +7,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, Optional
 from platform import system, machine
-from datetime import datetime
-from functools import cached_property
 from .templates import render_template
 import typer
 import sys
 import platform
-
+import sysconfig
 @dataclass(frozen=True)
 class TailwindReleaseInfo:
     """Release information for Tailwind binaries"""
@@ -82,7 +80,7 @@ class ProjectConfig:
     binary_metadata: Optional[BinaryMetadata] = None
     components: Dict[str, ComponentMetadata] = field(default_factory=dict)
     binary_path: Path = field(default_factory=lambda: Path(
-        sys.prefix) / "bin" / ProjectConfig.tailwind_binary_name
+        sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name()
     )
     
     def __post_init__(self):
@@ -171,17 +169,48 @@ class ProjectConfig:
             return comp.path
         return None 
 
-    @cached_property
-    def tailwind_binary_name(self) -> str:
-        return self.get_tailwind_binary_name()
-
     @staticmethod
     def get_tailwind_binary_name() -> str:
-        system = platform.system().lower()
-        arch = platform.machine().lower()
-        
-        if system == "darwin":
-            return f"tailwindcss-macos-{'arm64' if arch == 'arm64' else 'x64'}"
-        elif system == "linux":
-            return f"tailwindcss-linux-{'arm64' if arch == 'aarch64' else 'x64'}"
+        platform_name, architecture = detect_platform()
+        if platform_name == "macos":
+            return f"tailwindcss-macos-{architecture}"
+        elif platform_name == "linux":
+            return f"tailwindcss-linux-{architecture}"
         return "tailwindcss-windows-x64.exe" 
+    
+from platform import system, machine
+from typing import Literal
+
+PlatformName = Literal["macos", "linux", "windows"]
+Architecture = Literal["x64", "arm64"]
+
+def detect_platform() -> tuple[PlatformName, Architecture]:
+    """Detect current platform and architecture in a normalized way."""
+    sys_name = system().lower()
+    arch = machine().lower()
+    
+    # Determine platform
+    platform_name: PlatformName = "windows"
+    if sys_name == "darwin":
+        platform_name = "macos"
+    elif sys_name == "linux":
+        platform_name = "linux"
+
+    # Determine architecture
+    architecture: Architecture = "x64"
+    if arch in ("arm64", "aarch64"):
+        architecture = "arm64"
+    elif arch in ("x86_64", "amd64"):
+        architecture = "x64"
+
+    return platform_name, architecture
+
+def get_bin_dir() -> Path:
+    """Get platform-appropriate binary directory with venv awareness"""
+    # Try to use sysconfig first (respects virtual environments)
+    if scripts_path := sysconfig.get_path("scripts"):
+        return Path(scripts_path)
+    
+    # Fallback for non-standard environments
+    system = platform.system().lower()
+    return Path(sys.prefix) / ("Scripts" if system == "windows" else "bin") 
