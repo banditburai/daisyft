@@ -112,10 +112,10 @@ class ProjectConfig:
         spec.loader.exec_module(module)
         return getattr(module, "config", cls())
 
-    def save(self, path: Path) -> None:
-        """Save configuration to file"""
+    def save(self, path: Path = Path("daisyft.conf.py")) -> None:
+        """Save configuration to file with default path"""
         context = {
-            "config": self  # Pass the entire config object instead of individual fields
+            "config": self
         }
         render_template("daisyft.conf.py.jinja2", path, context=context)
 
