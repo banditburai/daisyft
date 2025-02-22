@@ -180,7 +180,7 @@ class ProjectConfig:
             return f"tailwindcss-linux-{architecture}"
         return "tailwindcss-windows-x64.exe" 
     
-    def update_from_options(self, options: InitOptions) -> None:
+    def update_from_options(self, options: "InitOptions") -> None:
         """Update config from initialization options"""
         self.style = options.style
         self.theme = options.theme
@@ -197,9 +197,6 @@ class ProjectConfig:
             "js": options.static_dir / "js",
             "icons": options.static_dir / "icons" if options.include_icons else Path("_disabled")
         }
-
-from platform import system, machine
-from typing import Literal
 
 PlatformName = Literal["macos", "linux", "windows"]
 Architecture = Literal["x64", "arm64"]
