@@ -115,9 +115,6 @@ class ProjectConfig:
     def save(self, path: Path = Path("daisyft.conf.py")) -> None:
         """Save config to a Python file"""
         context = {
-            # Only pass version if metadata exists
-            "binary_metadata": BinaryMetadata(version=self.binary_metadata.version) 
-                if self.binary_metadata else None,
             "style": self.style,
             "theme": self.theme,
             "app_path": self.app_path,
@@ -128,9 +125,7 @@ class ProjectConfig:
             "include_icons": self.include_icons,
             "verbose": self.verbose,
             "components": self.components,
-            "sys": sys,
-            "Path": Path,
-            "ProjectConfig": ProjectConfig
+            "binary_metadata": self.binary_metadata,                        
         }
         render_template("daisyft.conf.py.jinja2", path, **context)
 

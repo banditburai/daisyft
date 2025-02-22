@@ -11,7 +11,8 @@ class TemplateContext(TypedDict):
     port: int
     live: bool
     host: str
-    components: dict[str, Any]    
+    components: dict[str, Any]
+    binary_metadata: dict
 
 def render_template(template_name: str, output_path: Path, context: TemplateContext) -> None:
     """Safely render a Jinja template to file"""
