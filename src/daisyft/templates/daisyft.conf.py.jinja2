@@ -28,7 +28,7 @@ config = ProjectConfig(
     },
     binary_metadata=(
         BinaryMetadata(version="{{ binary_metadata.version }}")
-        if binary_metadata
+        if {{ 'binary_metadata' is not none }}
         else None
     ),
     components={
