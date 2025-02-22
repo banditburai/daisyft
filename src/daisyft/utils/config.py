@@ -112,22 +112,12 @@ class ProjectConfig:
         spec.loader.exec_module(module)
         return getattr(module, "config", cls())
 
-    def save(self, path: Path = Path("daisyft.conf.py")) -> None:
-        """Save config to a Python file"""
+    def save(self, path: Path) -> None:
+        """Save configuration to file"""
         context = {
-            "style": self.style,
-            "theme": self.theme,
-            "app_path": self.app_path,
-            "paths": self.paths,
-            "port": self.port,
-            "live": self.live,
-            "host": self.host,
-            "include_icons": self.include_icons,
-            "verbose": self.verbose,
-            "components": self.components,
-            "binary_metadata": self.binary_metadata,                        
+            "config": self  # Pass the entire config object instead of individual fields
         }
-        render_template("daisyft.conf.py.jinja2", path, **context)
+        render_template("daisyft.conf.py.jinja2", path, context=context)
 
     def update_binary_metadata(self, release_info: dict) -> None:
         """Update binary metadata from release info"""

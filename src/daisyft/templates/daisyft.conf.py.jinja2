@@ -1,34 +1,33 @@
 {# Configuration file template for daisyft projects #}
-{% set binary_metadata = binary_metadata|default(None) %}
 
 from pathlib import Path
 from datetime import datetime
 from daisyft.utils.config import ProjectConfig, BinaryMetadata, ComponentMetadata
 import sys
+from dataclasses import dataclass
 
 # Note: After changing settings like port/host/live, run 'daisyft sync' 
 # to update your main.py with the new values
 
 config = ProjectConfig(
-    style="{{ style }}",
-    theme="{{ theme }}",
-    app_path=Path("{{ app_path }}"),
-    host="{{ host }}",
-    port={{ port }},
-    live={{ live }},
-    include_icons={{ include_icons }},
-    verbose={{ verbose }},
+    style="{{ config.style }}",
+    theme="{{ config.theme }}",
+    app_path=Path("{{ config.app_path }}"),
+    include_icons={{ config.include_icons|lower }},
+    verbose={{ config.verbose|lower }},
+    host="{{ config.host }}",
+    port={{ config.port }},
+    live={{ config.live|lower }},
     paths={
-        "components": Path("{{ paths.components }}"),
-        "ui": Path("{{ paths.ui }}"),
-        "static": Path("{{ paths.static }}"),
-        "css": Path("{{ paths.css }}"),
-        "js": Path("{{ paths.js }}"),
-        "icons": Path("{{ paths.icons }}"),
+        {% for key, path in config.paths.items() %}
+        "{{ key }}": Path("{{ path }}"),
+        {% endfor %}
     },
-    binary_metadata={% if binary_metadata is not none %}BinaryMetadata(version="{{ binary_metadata.version }}"){% else %}None{% endif %},
+    binary_metadata=BinaryMetadata(
+        version="{{ config.binary_metadata.version }}"
+    ),
     components={
-        {% for name, comp in components.items() %}
+        {% for name, comp in config.components.items() %}
         "{{ name }}": ComponentMetadata(
             name="{{ comp.name }}",
             type="{{ comp.type }}",
