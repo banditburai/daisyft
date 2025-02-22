@@ -39,8 +39,7 @@ def download_tailwind_binary(
         if platform.system() != "Windows":
             dest.chmod(0o755)
         
-        config.update_binary_metadata(release_info)
-        console.print(f"[green]✓[/green] Installed {dest.name} to {dest}")
+        config.update_binary_metadata(release_info)        
         return dest
 
     except requests.RequestException as e:

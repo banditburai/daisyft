@@ -32,11 +32,17 @@ def dev(
     pm = ProcessManager()
     
     # Start Tailwind CSS watcher with process group
+    binary_path = config.binary_path
+    if not binary_path.exists():
+        console.print(f"[red]Error:[/red] Tailwind binary missing at {binary_path}")
+        console.print("Please run [bold]daisyft init --force[/bold] to download it")
+        raise typer.Exit(1)
+
     creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
     preexec_fn = os.setsid if os.name != 'nt' else None
     
     css_process = subprocess.Popen([
-        "./tailwindcss",
+        str(binary_path.absolute()),
         "-i", str(input_css_path),
         "-o", str(output_css_path),
         "--watch"

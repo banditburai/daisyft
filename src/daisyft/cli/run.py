@@ -39,8 +39,7 @@ def run(
         console.print("Please run [bold]daisyft init --force[/bold] to download it")
         raise typer.Exit(1)
             
-    try:
-        console.print(f"Resolved binary path: [dim]{binary_path}[/dim] (exists: {binary_path.exists()})")
+    try:        
         subprocess.run([
             str(binary_path.absolute()),
             "-i", str(input_css_path),
