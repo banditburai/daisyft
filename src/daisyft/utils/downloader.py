@@ -55,7 +55,7 @@ def _core_download(url: str, dest: Path, show_progress: bool) -> None:
 
     if show_progress:
         with Progress(
-            BarColumn(),
+            BarColumn(complete_style="success", finished_style="success.bold"),
             "[progress.percentage]{task.percentage:>3.0f}%",
             DownloadColumn(),
             TimeRemainingColumn(),
