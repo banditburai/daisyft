@@ -144,9 +144,17 @@ def init(
         config = ProjectConfig.load(config_path)
         config_exists = config.is_initialized
 
-        if not config_exists and not defaults:
-            options = get_user_options()
-            config.update_from_options(options)
+        if not config_exists:
+            if not defaults:
+                options = get_user_options()
+                config.update_from_options(options)
+            
+            # Download binary before saving config
+            console.print("\n[bold]Downloading Tailwind CSS...[/bold]")
+            download_tailwind_binary(config, force=force)
+            
+            # Save config with valid binary path
+            config.save(config_path)
 
         with Progress(
             SpinnerColumn(),
@@ -156,17 +164,16 @@ def init(
             task = progress.add_task("Initializing project...", total=100)
 
             if not config_exists:
-                progress.update(task, description="Creating directories...")
-                for path in config.paths.values():
-                    safe_create_directories(project_path / path)
+                progress.update(task, description="Creating directories...", advance=20)
+                for dir_path in config.paths.values():
+                    safe_create_directories(project_path / dir_path)
 
-                progress.update(task, advance=30, description="Generating files...")
+                progress.update(task, description="Generating files...", advance=30)
                 render_template_safe(
                     "input.css.jinja2",
                     project_path / config.paths["css"] / "input.css",
                     {"style": config.style, "components": {}}
                 )
-
                 render_template_safe(
                     "main.py.jinja2",
                     project_path / config.app_path,
@@ -179,21 +186,9 @@ def init(
                         "host": config.host
                     }
                 )
-                progress.update(task, advance=40)
-
-            progress.update(task, description="Downloading Tailwind...")
-            try:
-                binary_path = download_tailwind_binary(config, force=force)
-                if not binary_path.exists():
-                    raise typer.Exit(1)
-                progress.update(task, advance=20)
-            except Exception as e:
-                console.print(f"[yellow]Warning:[/yellow] Binary download failed - {e}")
-                progress.update(task, advance=20)
-
-            config.save(config_path)
-            progress.update(task, advance=10)
-
+                
+            progress.update(task, description="Finalizing setup...", advance=50)
+        
         console.print("\n[green]✓ Project initialized successfully![/green]")
         if not config_exists:
             console.print("\nNext steps:")

@@ -84,6 +84,11 @@ class ProjectConfig:
     )
     
     def __post_init__(self):
+        """Post-initialization checks"""
+        # Only validate binary path if metadata exists
+        if self.binary_metadata and not self.binary_path.exists():
+            raise ValueError(f"Binary path {self.binary_path} does not exist")
+        
         """Ensure all paths are absolute"""
         self.binary_path = self.binary_path.absolute()
         
@@ -92,10 +97,6 @@ class ProjectConfig:
         for key in self.paths:
             if isinstance(self.paths[key], Path):
                 self.paths[key] = self.paths[key].absolute()
-
-        """Ensure binary path exists after initialization"""
-        if not self.binary_path.exists():
-            raise ValueError(f"Binary path {self.binary_path} does not exist")
 
     @classmethod
     def load(cls, path: Path = Path("daisyft.conf.py")) -> "ProjectConfig":
