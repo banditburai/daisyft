@@ -26,11 +26,7 @@ config = ProjectConfig(
         "js": Path("{{ paths.js }}"),
         "icons": Path("{{ paths.icons }}"),
     },
-    binary_metadata=(
-        BinaryMetadata(version="{{ binary_metadata.version }}")
-        if {{ 'binary_metadata' is not none }}
-        else None
-    ),
+    binary_metadata={% if binary_metadata is not none %}BinaryMetadata(version="{{ binary_metadata.version }}"){% else %}None{% endif %},
     components={
         {% for name, comp in components.items() %}
         "{{ name }}": ComponentMetadata(
