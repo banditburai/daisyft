@@ -122,9 +122,9 @@ class ProjectConfig:
         return getattr(module, "config", cls())
 
     def save(self, path: Path = Path("daisyft.conf.py")) -> None:
-        """Ensure binary_metadata is always defined"""
+        """Save config to a Python file"""
         context = {
-            "binary_metadata": self.binary_metadata or None,
+            "binary_metadata": self.binary_metadata,
             "style": self.style,
             "theme": self.theme,
             "app_path": self.app_path,
@@ -134,7 +134,8 @@ class ProjectConfig:
             "host": self.host,
             "include_icons": self.include_icons,
             "verbose": self.verbose,
-            "components": self.components
+            "components": self.components,
+            "sys": sys
         }
         render_template("daisyft.conf.py.jinja2", path, **context)
 

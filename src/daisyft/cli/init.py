@@ -146,7 +146,7 @@ def init(
 
         with Progress(
             SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
+            TextColumn("[progress.description]{task.description}", style="info"),
             console=console
         ) as progress:
             task = progress.add_task("Initializing project...", total=100)
@@ -177,7 +177,7 @@ def init(
                 
             progress.update(task, description="Finalizing setup...", advance=50)
         
-        console.print("\n[green]✓ Project initialized successfully![/green]")
+        console.print("[bold green]✓ Project initialized successfully![/bold green]")
         if not config_exists:
             console.print("\nNext steps:")
             console.print("  1. Add components with [bold]daisyft add[/bold]")
