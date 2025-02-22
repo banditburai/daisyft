@@ -7,6 +7,11 @@ import time
 from ..utils.config import ProjectConfig
 from ..utils.process import ProcessManager
 from ..utils.console import console
+from ..utils.command_utils import (
+    validate_binary,
+    build_css_command,
+    resolve_css_paths
+)
 
 def dev(
     host: str = typer.Option(None, "--host", "-h", help="Override host from config"),
@@ -17,58 +22,47 @@ def dev(
     """Start development server with CSS watching"""
     config = ProjectConfig.load(Path("daisyft.conf.py"))
     
-    # Use config values unless overridden by command line
+    # Resolve paths using shared utility
+    input_css_path, output_css_path = resolve_css_paths(config, input_css, output_css)
+    
+    # Validate binary using shared utility
+    binary_path = validate_binary(config)
+    
+    # Use config values unless overridden
     host = host or config.host
     port = port or config.port
     
-    input_css_path = Path(input_css) if input_css else Path(config.paths["css"]) / "input.css"
-    output_css_path = Path(output_css) if output_css else Path(config.paths["css"]) / "output.css"
-    
-    # Delete existing output.css if it exists
+    # Clean existing CSS
     if output_css_path.exists():
         output_css_path.unlink()
         console.print("[bold]Cleaning existing CSS...[/bold]")
     
-    pm = ProcessManager()
-    
-    # Start Tailwind CSS watcher with process group
-    binary_path = config.binary_path
-    if not binary_path.exists():
-        console.print(f"[red]Error:[/red] Tailwind binary missing at {binary_path}")
-        console.print("Please run [bold]daisyft init --force[/bold] to download it")
-        raise typer.Exit(1)
-
-    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
-    preexec_fn = os.setsid if os.name != 'nt' else None
-    
-    css_process = subprocess.Popen([
-        str(binary_path.absolute()),
-        "-i", str(input_css_path),
-        "-o", str(output_css_path),
-        "--watch"
-    ], preexec_fn=preexec_fn, creationflags=creationflags)
-    pm.add_process(css_process)
-    
-    # Brief pause to let Tailwind start
-    time.sleep(0.5)
-    
-    # Start FastHTML dev server with process group
-    server_process = subprocess.Popen([
-        "uvicorn",
-        f"{config.app_path.stem}:app",
-        "--host", host,
-        "--port", str(port),
-        "--reload"
-    ], preexec_fn=preexec_fn, creationflags=creationflags)
-    pm.add_process(server_process)
-    
-    # Brief pause to check if server started successfully
-    time.sleep(0.5)
-    if server_process.poll() is None:
-        console.print(f"\n[green]Server running at[/green] http://{host}:{port}")
-    
-    try:
-        server_process.wait()
-    except KeyboardInterrupt:
-        pm.cleanup()
-        sys.exit(0) 
+    with ProcessManager().manage() as pm:
+        # Start Tailwind watcher
+        css_process = subprocess.Popen(
+            build_css_command(binary_path, input_css_path, output_css_path, watch=True),
+            preexec_fn=pm.preexec_fn,
+            creationflags=pm.creationflags
+        )
+        pm.add_process(css_process)
+        
+        # Start FastHTML dev server
+        server_process = subprocess.Popen([
+            "uvicorn",
+            f"{config.app_path.stem}:app",
+            "--host", host,
+            "--port", str(port),
+            "--reload"
+        ], preexec_fn=pm.preexec_fn, creationflags=pm.creationflags)
+        pm.add_process(server_process)
+        
+        # Status check
+        time.sleep(0.5)
+        if server_process.poll() is None:
+            console.print(f"\n[green]Server running at[/green] http://{host}:{port}")
+        
+        try:
+            server_process.wait()
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Shutting down...[/yellow]")
+            raise typer.Exit(0) 

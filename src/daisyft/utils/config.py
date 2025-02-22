@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, Optional
 from platform import system, machine
-from .templates import render_template
+from .template import render_template
 import typer
 import sys
 import platform
@@ -203,29 +203,28 @@ class ProjectConfig:
             "icons": options.static_dir / "icons" if options.include_icons else Path("_disabled")
         }
 
-
-
 PlatformName = Literal["macos", "linux", "windows"]
 Architecture = Literal["x64", "arm64"]
 
 def detect_platform() -> tuple[PlatformName, Architecture]:
     """Detect current platform and architecture in a normalized way."""
-    sys_name = system().lower()
-    arch = machine().lower()
-    
-    # Determine platform
-    platform_name: PlatformName = "windows"
-    if sys_name == "darwin":
-        platform_name = "macos"
-    elif sys_name == "linux":
-        platform_name = "linux"
+    # Platform detection with structural pattern matching
+    match platform.system().lower():
+        case "darwin":
+            platform_name: PlatformName = "macos"
+        case "linux":
+            platform_name = "linux"
+        case _:  # default case
+            platform_name = "windows"
 
-    # Determine architecture
-    architecture: Architecture = "x64"
-    if arch in ("arm64", "aarch64"):
-        architecture = "arm64"
-    elif arch in ("x86_64", "amd64"):
-        architecture = "x64"
+    # Architecture detection with pattern matching
+    match machine().lower():
+        case arch if arch in ("arm64", "aarch64"):
+            architecture: Architecture = "arm64"
+        case arch if arch in ("x86_64", "amd64"):
+            architecture = "x64"
+        case _:  # default case
+            architecture = "x64"
 
     return platform_name, architecture
 

@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess
 from ..utils.config import ProjectConfig
 from ..utils.console import console  
+from ..utils.command_utils import validate_binary, build_css_command, resolve_css_paths
 
 def build(
     input_path: str = typer.Option(None, "--input", "-i", help="Input CSS file path"),
@@ -11,20 +12,12 @@ def build(
 ) -> None:
     """Build Tailwind CSS"""
     config = ProjectConfig.load(Path("daisyft.conf.py"))
-    
-    input_css = Path(input_path) if input_path else Path(config.paths["css"]) / "input.css"
-    output_css = Path(output_path) if output_path else Path(config.paths["css"]) / "output.css"
+    input_path, output_path = resolve_css_paths(config, input_path, output_path)
+    binary_path = validate_binary(config)
     
     console.print(f"[bold]Building CSS...[/bold]")
     try:
-        cmd = [
-            "./tailwindcss",
-            "-i", str(input_css),
-            "-o", str(output_css)
-        ]
-        if minify:
-            cmd.append("--minify")
-        
+        cmd = build_css_command(binary_path, input_path, output_path, minify=minify)
         subprocess.run(cmd, check=True)
         console.print(f"[green]✓[/green] CSS built successfully!")
     except subprocess.CalledProcessError as e:

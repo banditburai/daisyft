@@ -2,6 +2,8 @@ import signal
 import subprocess
 import os
 from ..utils.console import console
+from typing import List
+from contextlib import contextmanager
 
 class ProcessManager:
     """Manage multiple subprocesses cleanly"""
@@ -9,6 +11,16 @@ class ProcessManager:
         self.processes = []
         self._setup_signal_handlers()
         self.done = False
+    
+    @property
+    def creationflags(self) -> int:
+        """Get appropriate creation flags for current OS"""
+        return subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
+
+    @property
+    def preexec_fn(self) -> callable:
+        """Get appropriate preexec function for current OS"""
+        return os.setsid if os.name != 'nt' else None
     
     def _setup_signal_handlers(self):
         """Set up signal handlers for clean shutdown"""
@@ -52,3 +64,17 @@ class ProcessManager:
                 pass  # Process might already be dead
         
         self.processes.clear()
+
+    @contextmanager
+    def manage(self):
+        """Context manager interface for process management"""
+        try:
+            yield self
+        finally:
+            self.cleanup()
+            self._restore_signal_handlers()  # Optional if needed
+
+    def _restore_signal_handlers(self):
+        """Restore original signal handlers if needed"""
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
