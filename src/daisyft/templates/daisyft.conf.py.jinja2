@@ -28,11 +28,11 @@ config = ProjectConfig(
     },
     binary_metadata=BinaryMetadata(
         version={{ binary_metadata.version|tojson }},
-        path=Path({{ binary_metadata.path.absolute().as_posix()|tojson }})
+        path=Path({{ (Path(sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name()).as_posix()|tojson }})
     ) if binary_metadata else (
         BinaryMetadata(
             version="",
-            path=Path({{(Path(sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name())|tojson}})
+            path=Path({{ (Path(sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name()).as_posix()|tojson }})
         ) if binary_metadata is None else None
     ),
     components={
