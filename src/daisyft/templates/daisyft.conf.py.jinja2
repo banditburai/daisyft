@@ -32,7 +32,7 @@ config = ProjectConfig(
     ) if binary_metadata else (
         BinaryMetadata(
             version="",
-            path=Path({{ Path(sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name() }})
+            path=Path({{(Path(sys.prefix) / "bin" / ProjectConfig.get_tailwind_binary_name())|tojson}})
         ) if binary_metadata is None else None
     ),
     components={

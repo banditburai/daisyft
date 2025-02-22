@@ -136,7 +136,8 @@ class ProjectConfig:
             "verbose": self.verbose,
             "components": self.components,
             "sys": sys,
-            "Path": Path
+            "Path": Path,
+            "ProjectConfig": ProjectConfig
         }
         render_template("daisyft.conf.py.jinja2", path, **context)
 
