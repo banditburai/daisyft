@@ -2,7 +2,6 @@
 #  Project Configuration and binary management
 # ============================================================================
 
-from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Literal, Optional
@@ -12,7 +11,18 @@ import typer
 import sys
 import platform
 import sysconfig
-from ..cli.init import InitOptions
+
+@dataclass
+class InitOptions:
+    """Initialization options for project setup"""
+    style: str = "daisy"
+    theme: str = "dark"
+    app_path: Path = Path("main.py")
+    include_icons: bool = True
+    components_dir: Path = Path("components")
+    static_dir: Path = Path("static")
+    verbose: bool = True
+
 @dataclass(frozen=True)
 class TailwindReleaseInfo:
     """Release information for Tailwind binaries"""
@@ -180,7 +190,7 @@ class ProjectConfig:
             return f"tailwindcss-linux-{architecture}"
         return "tailwindcss-windows-x64.exe" 
     
-    def update_from_options(self, options: "InitOptions") -> None:
+    def update_from_options(self, options: InitOptions) -> None:
         """Update config from initialization options"""
         self.style = options.style
         self.theme = options.theme

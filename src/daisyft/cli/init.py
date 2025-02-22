@@ -6,22 +6,10 @@ from questionary import Choice
 import typer
 from jinja2 import TemplateError
 from rich.progress import Progress, SpinnerColumn, TextColumn
-
-from ..utils.config import ProjectConfig
+from ..utils.config import ProjectConfig, InitOptions
 from ..utils.console import console
 from ..utils.downloader import download_tailwind_binary
 from ..utils.template import render_template, TemplateContext
-
-@dataclass
-class InitOptions:
-    """Initialization options for project setup"""
-    style: str = "daisy"
-    theme: str = "dark"
-    app_path: Path = Path("main.py")
-    include_icons: bool = True
-    components_dir: Path = Path("components")
-    static_dir: Path = Path("static")
-    verbose: bool = True
 
 def handle_style_prompt(answers: Dict[str, Any]) -> None:
     answers["style"] = questionary.select(
