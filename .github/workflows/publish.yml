@@ -31,8 +31,7 @@ jobs:
       - name: Build package
         run: |
           # Build the package with uv
-          # Using --no-sources to ensure compatibility with other build tools
-          uv build --no-sources
+          uv build
           
           # Verify dist directory contains files
           if [ ! "$(ls -A dist)" ]; then
