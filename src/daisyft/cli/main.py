@@ -1,8 +1,8 @@
 import typer
 from pathlib import Path
 from typing import Optional, List
-from daisyft.cli import init, add, config, build, dev, run, sync
-from .registry import commands as registry_commands
+from daisyft.cli import init, config, build, dev, run, sync
+
 from ..utils.console import console
 from ..utils.toml_config import load_config
 
@@ -15,15 +15,10 @@ app = typer.Typer(
 
 # Register commands
 app.command()(init.init)
-app.command()(add.add)
 app.command()(build.build)
 app.command()(dev.dev)
 app.command()(run.run)
 app.command()(sync.sync)
-app.command()(config.config)
-
-# Add registry commands as a group
-app.add_typer(registry_commands.registry_app, name="registry")
 
 @app.callback()
 def callback(ctx: typer.Context):
