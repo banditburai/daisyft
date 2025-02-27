@@ -1,6 +1,6 @@
 [project]
 name = "daisyft"
-version = "0.1.01"
+version = "0.1.2"
 description = "DaisyUI/Tailwind/Motion components for FastHTML projects"
 readme = "README.md"
 authors = [
@@ -45,10 +45,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-packages = ["src/daisyft"]
+packages = ["src"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/daisyft"]
+packages = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
