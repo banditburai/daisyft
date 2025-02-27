@@ -7,7 +7,8 @@ import typer
 from jinja2 import TemplateError
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
-from ..utils.toml_config import ProjectConfig, InitOptions
+from ..utils.config import ProjectConfig, InitOptions
+from ..utils.toml_config import load_config, save_config
 from ..utils.console import console
 from ..utils.downloader import download_tailwind_binary
 from ..utils.template import render_template, TemplateContext
@@ -252,7 +253,7 @@ def init(
         project_path.mkdir(parents=True, exist_ok=True)
         
         # Check if project is already initialized
-        config = ProjectConfig.load(config_path)
+        config = load_config(config_path)
         config_exists = config.is_initialized
 
         if config_exists and not force:
@@ -285,7 +286,7 @@ def init(
             download_tailwind_binary(config, force=force)
             
             # Save config with valid binary path
-            config.save(config_path)
+            save_config(config, config_path)
 
             if not config_exists:
                 # Create project structure
