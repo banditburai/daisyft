@@ -63,6 +63,7 @@ def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
             theme=project_data.get('theme', ProjectConfig.theme),
             app_path=project_data.get('app_path', ProjectConfig.app_path),
             include_icons=project_data.get('include_icons', ProjectConfig.include_icons),
+            include_datastar=project_data.get('include_datastar', ProjectConfig.include_datastar),
             verbose=project_data.get('verbose', ProjectConfig.verbose),
             host=server_data.get('host', ProjectConfig.host),
             port=server_data.get('port', ProjectConfig.port),
@@ -72,6 +73,10 @@ def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
             binary_metadata=binary_metadata,
             components=components
         )
+        
+        # Set previous_style if it exists in the data
+        if 'previous_style' in project_data:
+            config.previous_style = project_data['previous_style']
         
         return config
         
@@ -98,6 +103,7 @@ def save_config(config: ProjectConfig, config_path: Optional[Path] = None) -> No
                 'theme': config.theme,
                 'app_path': str(config.app_path),
                 'include_icons': config.include_icons,
+                'include_datastar': config.include_datastar,
                 'verbose': config.verbose,
                 'template': config.template,
             },
@@ -110,6 +116,10 @@ def save_config(config: ProjectConfig, config_path: Optional[Path] = None) -> No
                 key: str(value) for key, value in config.paths.items()
             },
         }
+        
+        # Add previous_style if it exists
+        if hasattr(config, 'previous_style') and config.previous_style is not None:
+            data['project']['previous_style'] = config.previous_style
         
         # Add binary metadata if available
         if config.binary_metadata:

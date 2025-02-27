@@ -34,8 +34,11 @@ def check_for_binary_update(config: ProjectConfig) -> bool:
             console.print("[yellow]No binary metadata found. Download required.[/yellow]")
             return True
             
-        # Check if style has changed
-        if hasattr(config, 'previous_style') and config.previous_style != config.style:
+        # Check if style has changed - but only if previous_style is not None
+        # and it's different from the current style
+        if (hasattr(config, 'previous_style') and 
+            config.previous_style is not None and 
+            config.previous_style != config.style):
             console.print(f"[yellow]Style changed from {config.previous_style} to {config.style}.[/yellow]")
             return True
             
@@ -89,7 +92,9 @@ def download_tailwind_binary(
             
             # Force download if style has changed
             style_changed = False
-            if hasattr(config, 'previous_style') and config.previous_style != config.style:
+            if (hasattr(config, 'previous_style') and 
+                config.previous_style is not None and 
+                config.previous_style != config.style):
                 style_changed = True
                 force = True
                 console.print(f"[yellow]Style changed from {config.previous_style} to {config.style}, downloading new binary...[/yellow]")
