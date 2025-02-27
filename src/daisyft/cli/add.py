@@ -42,18 +42,20 @@ def add(
     ))
     
     # Simplified component selection - only Button for now
-    available_components = ["button"]
+    available_components = [
+        {"value": "button", "name": "Button component"}
+    ]
     
     if not component:
         component = questionary.select(
             "Select a component to add:",
             choices=available_components,
-            default="button"
+            default=available_components[0]
         ).ask()
     
-    if not component or component.lower() not in available_components:
+    if not component or component.lower() not in ["button"]:
         console.print(f"[red]Error:[/red] Component '{component}' not available yet.")
-        console.print("Currently available components: " + ", ".join(available_components))
+        console.print("Currently available components: button")
         raise typer.Exit(1)
     
     # Get and validate component

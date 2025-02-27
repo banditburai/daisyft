@@ -32,37 +32,53 @@ TEMPLATES = {
 # Simplified question handlers with progressive disclosure
 def handle_basic_options(answers: Dict[str, Any]) -> None:
     """Handle the basic, most important configuration options"""
+    # Define style choices
     style_choices = [
-        Choice("daisy", "DaisyUI components (recommended)"),
-        Choice("vanilla", "Vanilla Tailwind CSS")
+        {"value": "daisy", "name": "DaisyUI components (recommended)"},
+        {"value": "vanilla", "name": "Vanilla Tailwind CSS"}
     ]
     
-    # Use the actual choice object to get the value
+    # Find default choice
+    default_choice = 0
+    for i, choice in enumerate(style_choices):
+        if choice["value"] == answers["style"]:
+            default_choice = i
+            break
+    
+    # Use dictionary-based choices instead of Choice objects
     selected = questionary.select(
         "Style framework:",
         choices=style_choices,
-        default=next((c for c in style_choices if c.value == answers["style"]), style_choices[0])
+        default=style_choices[default_choice]
     ).ask()
     
-    # Make sure we're getting the value, not the display text
+    # Update the style
     answers["style"] = selected
     
     if answers["style"] == "daisy":
+        # Define theme choices
         theme_choices = [
-            Choice("dark", "Dark mode (default)"),
-            Choice("light", "Light mode"),
-            Choice("cupcake", "Light and playful"),
-            Choice("corporate", "Professional and clean")
+            {"value": "dark", "name": "Dark mode (default)"},
+            {"value": "light", "name": "Light mode"},
+            {"value": "cupcake", "name": "Light and playful"},
+            {"value": "corporate", "name": "Professional and clean"}
         ]
         
-        # Use the actual choice object to get the value
+        # Find default choice
+        default_choice = 0
+        for i, choice in enumerate(theme_choices):
+            if choice["value"] == answers["theme"]:
+                default_choice = i
+                break
+        
+        # Use dictionary-based choices
         selected_theme = questionary.select(
             "Theme:",
             choices=theme_choices,
-            default=next((c for c in theme_choices if c.value == answers["theme"]), theme_choices[0])
+            default=theme_choices[default_choice]
         ).ask()
         
-        # Make sure we're getting the value, not the display text
+        # Update the theme
         answers["theme"] = selected_theme
     else:
         answers["theme"] = "default"
@@ -110,37 +126,31 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
         # Quick setup with minimal questions (default)
         # Just ask the most essential questions
         style_choices = [
-            Choice("daisy", "DaisyUI components (recommended)"),
-            Choice("vanilla", "Vanilla Tailwind CSS")
+            {"value": "daisy", "name": "DaisyUI components (recommended)"},
+            {"value": "vanilla", "name": "Vanilla Tailwind CSS"}
         ]
         
-        # Use the actual choice object to get the value
-        selected = questionary.select(
+        # Use dictionary-based choices
+        style = questionary.select(
             "Style framework:",
             choices=style_choices,
-            default=style_choices[0]  # Use the first choice object as default
+            default=style_choices[0]
         ).ask()
-        
-        # Make sure we're getting the value, not the display text
-        style = selected
         
         if style == "daisy":
             theme_choices = [
-                Choice("dark", "Dark mode (default)"),
-                Choice("light", "Light mode"),
-                Choice("cupcake", "Light and playful"),
-                Choice("corporate", "Professional and clean")
+                {"value": "dark", "name": "Dark mode (default)"},
+                {"value": "light", "name": "Light mode"},
+                {"value": "cupcake", "name": "Light and playful"},
+                {"value": "corporate", "name": "Professional and clean"}
             ]
             
-            # Use the actual choice object to get the value
-            selected_theme = questionary.select(
+            # Use dictionary-based choices
+            theme = questionary.select(
                 "Theme:",
                 choices=theme_choices,
-                default=theme_choices[0]  # Use the first choice object as default
+                default=theme_choices[0]
             ).ask()
-            
-            # Make sure we're getting the value, not the display text
-            theme = selected_theme
         else:
             theme = "default"
             
@@ -179,14 +189,21 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
     try:
         # Select template first
         template_choices = [
-            Choice(name, info["description"]) 
+            {"value": name, "name": info["description"]} 
             for name, info in TEMPLATES.items()
         ]
+        
+        # Find default choice
+        default_choice = 0
+        for i, choice in enumerate(template_choices):
+            if choice["value"] == "standard":
+                default_choice = i
+                break
         
         answers["template"] = questionary.select(
             "Select a template:",
             choices=template_choices,
-            default=next((c for c in template_choices if c.value == "standard"), template_choices[0])
+            default=template_choices[default_choice]
         ).ask()
         
         # Always ask for basic options
