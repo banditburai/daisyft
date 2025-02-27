@@ -30,8 +30,7 @@ def callback(ctx: typer.Context):
     [bold]Getting Started:[/bold]
     - Run [green]daisyft init[/green] to create a new project with minimal setup
     - Run [green]daisyft init --advanced[/green] for more configuration options
-    - Run [green]daisyft dev[/green] to start the development server
-    - Run [green]daisyft add button[/green] to add the Button component
+    - Run [green]daisyft dev[/green] to start the development server    
     - Run [green]daisyft sync[/green] to check for Tailwind binary updates
     
     [dim]For more information, visit: https://github.com/banditburai/daisyft[/dim]
