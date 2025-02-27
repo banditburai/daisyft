@@ -396,37 +396,10 @@ def init(
                     {"style": config.style, "components": {}}
                 )
                 
-                # Ask user if they want to update main.py
-                if typer.confirm(
-                    f"Style changed from {config.previous_style} to {config.style}. Update main.py with new style settings?",
-                    default=True
-                ):
-                    progress.update(task, description="Updating main.py...", advance=10)
-                    # Backup the original file
-                    backup_path = project_path / f"{config.app_path}.bak"
-                    try:
-                        original_path = project_path / config.app_path
-                        if original_path.exists():
-                            with open(original_path, 'r') as src, open(backup_path, 'w') as dst:
-                                dst.write(src.read())
-                            console.print(f"[green]✓[/green] Backed up original {config.app_path} to {backup_path}")
-                        
-                        # Generate new main.py
-                        render_template_safe(
-                            "main.py.jinja2",
-                            project_path / config.app_path,
-                            {
-                                "style": config.style,
-                                "theme": config.theme,
-                                "paths": config.paths,
-                                "port": config.port,
-                                "live": config.live,
-                                "host": config.host
-                            }
-                        )
-                    except Exception as e:
-                        console.print(f"[yellow]Warning:[/yellow] Could not update main.py: {e}")
-                        console.print("You may need to manually update your app file to use the new style settings.")
+                # Inform the user about the style change and what they might need to update
+                console.print(f"[yellow]Style changed from {config.previous_style} to {config.style}.[/yellow]")
+                console.print("[yellow]You may need to update your app file to use the new style settings.[/yellow]")
+                console.print("[yellow]Run 'daisyft sync' to update your project files.[/yellow]")
             
             progress.update(task, description="Finalizing setup...", advance=40)
         
@@ -456,10 +429,7 @@ def init(
                 console.print(f"\n[bold]Style changed from {config.previous_style} to {config.style}.[/bold]")
                 console.print("  • CSS input file has been updated")
                 console.print("  • Run [bold]daisyft build[/bold] to rebuild your CSS with the new style")
-                
-                # If main.py was updated, mention the backup
-                if (project_path / f"{config.app_path}.bak").exists():
-                    console.print(f"  • Your original {config.app_path} was backed up to {config.app_path}.bak")
+                console.print("  • You may need to update your app file to use the new style settings")
                     
             console.print("\n[bold]Run [green]daisyft sync[/green] to ensure all files are up to date.[/bold]")
 
