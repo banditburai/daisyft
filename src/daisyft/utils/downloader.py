@@ -1,23 +1,41 @@
-from __future__ import annotations
+"""
+Utilities for downloading Tailwind binaries.
+"""
 import platform
 import requests
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Callable
 from rich.progress import Progress, BarColumn, DownloadColumn, TimeRemainingColumn, TextColumn
-from .config import TailwindReleaseInfo, ProjectConfig, get_bin_dir
-from .console import console
 import typer
-import sys
+
+from .config import ProjectConfig
+from .platform import get_bin_dir, get_tailwind_binary_name
+from .release_info import TailwindReleaseInfo
+from .console import console
+from .toml_config import save_config
 
 def download_tailwind_binary(
     config: ProjectConfig,
     force: bool = False,
     show_progress: bool = True
 ) -> Path:
-    """Unified download handler with version checks and progress control"""
+    """
+    Unified download handler with version checks and progress control.
+    
+    Args:
+        config: ProjectConfig object with configuration settings
+        force: Whether to force download even if already up to date
+        show_progress: Whether to show download progress
+        
+    Returns:
+        Path to the downloaded binary
+    """
     try:
+        # Debug output to show which style is being used
+        console.print(f"[dim]Using style: {config.style}[/dim]")
+        
         release_info = get_release_info(config.style)
-        dest = get_bin_dir() / ProjectConfig.get_tailwind_binary_name()
+        dest = get_bin_dir() / get_tailwind_binary_name()
 
         # Version check
         if not force and config.binary_metadata:
@@ -33,13 +51,17 @@ def download_tailwind_binary(
 
         # Perform download
         url = f"{TailwindReleaseInfo.get_download_url(config.style)}{dest.name}"
+        # Debug output to show which URL is being used
+        console.print(f"[dim]Downloading from: {url}[/dim]")
+        
         _core_download(url, dest, show_progress)
 
         # Post-download setup
         if platform.system() != "Windows":
             dest.chmod(0o755)
         
-        config.update_binary_metadata(release_info)        
+        config.update_binary_metadata(release_info)
+        save_config(config)
         return dest
 
     except requests.RequestException as e:
@@ -48,7 +70,14 @@ def download_tailwind_binary(
         raise typer.Exit(1) from e
 
 def _core_download(url: str, dest: Path, show_progress: bool) -> None:
-    """Base download implementation with progress optional"""
+    """
+    Base download implementation with progress optional.
+    
+    Args:
+        url: URL to download from
+        dest: Destination path to save the file
+        show_progress: Whether to show download progress
+    """
     response = requests.get(url, stream=True, timeout=(3.05, 30))
     response.raise_for_status()
 
@@ -67,8 +96,15 @@ def _core_download(url: str, dest: Path, show_progress: bool) -> None:
     else:
         _write_content(response, dest)
 
-def _write_content(response: requests.Response, dest: Path, callback: Optional[callable] = None) -> None:
-    """Stream response to file with optional progress callback"""
+def _write_content(response: requests.Response, dest: Path, callback: Optional[Callable[[int], None]] = None) -> None:
+    """
+    Stream response to file with optional progress callback.
+    
+    Args:
+        response: HTTP response object
+        dest: Destination path to save the file
+        callback: Optional callback function to report progress
+    """
     dest.parent.mkdir(parents=True, exist_ok=True)
     with dest.open("wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
@@ -77,8 +113,18 @@ def _write_content(response: requests.Response, dest: Path, callback: Optional[c
                 callback(len(chunk))
 
 def get_release_info(style: str = "daisy") -> dict:
-    """Fetch GitHub release info with timeout"""
+    """
+    Fetch GitHub release info with timeout.
+    
+    Args:
+        style: Either "daisy" or "vanilla" to determine which repository to use
+        
+    Returns:
+        Dictionary with release information
+    """
     url = TailwindReleaseInfo.get_api_url(style)
+    console.print(f"[dim]Fetching release info from: {url}[/dim]")
+    
     try:
         response = requests.get(url, timeout=(3.05, 30))
         response.raise_for_status()
@@ -88,15 +134,20 @@ def get_release_info(style: str = "daisy") -> dict:
         raise typer.Exit(1) from e
 
 def download_binary(style: Literal["daisy", "vanilla"]) -> Path:
-    """Download platform-specific Tailwind binary using project config"""
-    system = platform.system().lower()
-    arch = platform.machine().lower()
+    """
+    Download platform-specific Tailwind binary.
     
-    # Get binary name from existing project logic
-    binary_name = ProjectConfig.get_tailwind_binary_name()
+    Args:
+        style: Either "daisy" or "vanilla" to determine which repository to use
+        
+    Returns:
+        Path to the downloaded binary
+    """
+    # Get binary name
+    binary_name = get_tailwind_binary_name()
     
     # Final destination path
-    dest = Path(sys.prefix) / ("Scripts" if system == "windows" else "bin") / binary_name
+    dest = get_bin_dir() / binary_name
     
     console.print(f"  Downloading binary to: [cyan]{dest}[/cyan]")
     
@@ -114,7 +165,7 @@ def download_binary(style: Literal["daisy", "vanilla"]) -> Path:
             f.write(chunk)
     
     # Set executable permissions
-    if system != "windows":
+    if platform.system().lower() != "windows":
         dest.chmod(0o755)
     
     console.print(f"  Binary installed at: [green]{dest}[/green]")

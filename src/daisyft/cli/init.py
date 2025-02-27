@@ -36,11 +36,15 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
         Choice("vanilla", "Vanilla Tailwind CSS")
     ]
     
-    answers["style"] = questionary.select(
+    # Use the actual choice object to get the value
+    selected = questionary.select(
         "Style framework:",
         choices=style_choices,
         default=next((c for c in style_choices if c.value == answers["style"]), style_choices[0])
     ).ask()
+    
+    # Make sure we're getting the value, not the display text
+    answers["style"] = selected
     
     if answers["style"] == "daisy":
         theme_choices = [
@@ -50,11 +54,15 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
             Choice("corporate", "Professional and clean")
         ]
         
-        answers["theme"] = questionary.select(
+        # Use the actual choice object to get the value
+        selected_theme = questionary.select(
             "Theme:",
             choices=theme_choices,
             default=next((c for c in theme_choices if c.value == answers["theme"]), theme_choices[0])
         ).ask()
+        
+        # Make sure we're getting the value, not the display text
+        answers["theme"] = selected_theme
     else:
         answers["theme"] = "default"
 
@@ -99,20 +107,21 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
     
     if not advanced:
         # Quick setup with minimal questions (default)
-        style = "daisy"
-        theme = "dark"
-        
         # Just ask the most essential questions
         style_choices = [
             Choice("daisy", "DaisyUI components (recommended)"),
             Choice("vanilla", "Vanilla Tailwind CSS")
         ]
         
-        style = questionary.select(
+        # Use the actual choice object to get the value
+        selected = questionary.select(
             "Style framework:",
             choices=style_choices,
             default=style_choices[0]  # Use the first choice object as default
         ).ask()
+        
+        # Make sure we're getting the value, not the display text
+        style = selected
         
         if style == "daisy":
             theme_choices = [
@@ -122,11 +131,15 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
                 Choice("corporate", "Professional and clean")
             ]
             
-            theme = questionary.select(
+            # Use the actual choice object to get the value
+            selected_theme = questionary.select(
                 "Theme:",
                 choices=theme_choices,
                 default=theme_choices[0]  # Use the first choice object as default
             ).ask()
+            
+            # Make sure we're getting the value, not the display text
+            theme = selected_theme
         else:
             theme = "default"
             
