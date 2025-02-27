@@ -426,7 +426,7 @@ def init(
                 console.print("  • CSS input file has been updated")                
                 console.print("  • You may need to update your app file to use the new style settings")
                     
-            console.print("\n[bold]Run [green]daisyft sync[/green] to ensure all files are up to date.[/bold]")
+            console.print("\n[bold]Run [green]daisyft sync[/green] to check for Tailwind binary updates.[/bold]")
 
     except (OSError, PermissionError) as e:
         console.print(f"[red]Fatal error:[/red] {e}")

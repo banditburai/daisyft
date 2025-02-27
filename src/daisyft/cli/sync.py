@@ -3,81 +3,48 @@ from pathlib import Path
 from typing import Optional
 from ..utils.config import ProjectConfig
 from ..utils.toml_config import load_config, save_config
+from ..utils.downloader import download_tailwind_binary, check_for_binary_update
 import logging
 from ..utils.console import console
 logger = logging.getLogger(__name__)
 
 def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
-    """Internal sync function that works with ProjectConfig object"""
+    """Internal sync function that works with ProjectConfig object
+    
+    Checks for updates to the Tailwind binary and downloads if available.
+    """
     logger.debug("Starting sync...")
     
-    # Ensure directories exist
-    for path in config.paths.values():
-        path = Path(path)  # Ensure Path object
-        path.mkdir(parents=True, exist_ok=True)
-        logger.debug(f"Ensured directory exists: {path}")
-
-    # Update CSS
-    css_file = Path(config.paths["css"]) / "input.css"
-    logger.debug(f"CSS file path: {css_file}")
+    # Check for binary updates
+    console.print("[bold]Checking for Tailwind binary updates...[/bold]")
     
-    if not css_file.exists() or force:
-        logger.debug("Creating/updating CSS file")
+    update_available = check_for_binary_update(config)
+    
+    if update_available or force:
+        console.print(f"[yellow]Update available for Tailwind binary.[/yellow]")
+        console.print(f"Downloading latest {config.style} binary...")
         
-        # Create CSS content based on style and theme
-        if config.style == "daisy":
-            # For DaisyUI, include proper theme configuration
-            css_content = [
-                '@import "tailwindcss";',
-                '@plugin "daisyui" {',
-                f'  themes: {config.theme} --default;',
-                '  logs: false;',
-                '}'
-            ]
-            
-            # Add a comment to help users customize themes
-            css_content.extend([
-                '',
-                '/* To customize themes or add more themes, see:',
-                ' * https://daisyui.com/docs/themes/',
-                ' * ',
-                ' * Example:',
-                ' * @plugin "daisyui" {',
-                ' *   themes: light --default, dark --prefersdark, cupcake, corporate;',
-                ' * }',
-                ' *',
-                ' * Or add a custom theme:',
-                ' * @plugin "daisyui/theme" {',
-                ' *   name: "mytheme";',
-                ' *   --color-primary: #1EA1F1;',
-                ' *   --color-secondary: #0070BA;',
-                ' * }',
-                ' */',
-            ])
-        else:
-            # For vanilla Tailwind, just import Tailwind
-            css_content = [
-                '@import "tailwindcss";'
-            ]
+        # Download the latest binary
+        download_tailwind_binary(config, force=True)
         
-        # Write the CSS file
-        css_file.write_text("\n".join(css_content) + "\n")
-        console.print(f"[green]✓[/green] Updated CSS file at {css_file}")
-    
-    # Save any changes to the config
-    save_config(config)
-    
-    # Provide helpful information about next steps
-    console.print("\n[bold]Project files synced successfully![/bold]")
-    console.print("Run [bold]daisyft build[/bold] to rebuild your CSS with the updated settings.")
+        # Save config with updated binary metadata
+        save_config(config)
+        
+        console.print("[green]✓[/green] Tailwind binary updated successfully!")
+    else:
+        console.print("[green]✓[/green] Tailwind binary is up to date.")
     
     logger.debug("Sync completed successfully")
     return True
 
 def sync(
-    force: bool = typer.Option(False, "--force", "-f", help="Force sync even if no changes"),
+    force: bool = typer.Option(False, "--force", "-f", help="Force download even if no update is available"),
 ) -> None:
-    """Sync project files and rebuild CSS"""
+    """Sync Tailwind binary with the latest version
+    
+    This command checks for updates to the Tailwind binary and downloads
+    the latest version if available.
+    """
     
     if not Path("daisyft.toml").exists():
         console.print("[red]Error:[/red] Not in a daisyft project.")

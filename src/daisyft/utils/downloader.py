@@ -14,6 +14,40 @@ from .release_info import TailwindReleaseInfo
 from .console import console
 from .toml_config import save_config
 
+def check_for_binary_update(config: ProjectConfig) -> bool:
+    """
+    Check if a newer version of the Tailwind binary is available.
+    
+    Args:
+        config: ProjectConfig object with configuration settings
+        
+    Returns:
+        True if an update is available, False otherwise
+    """
+    try:
+        # Get release info
+        release_info = get_release_info(config.style)
+        latest_version = release_info.get("tag_name", "unknown")
+        
+        # If no binary metadata exists, an update is needed
+        if not config.binary_metadata:
+            return True
+            
+        # Check if style has changed
+        if hasattr(config, 'previous_style') and config.previous_style != config.style:
+            return True
+            
+        # Compare versions
+        current_version = config.binary_metadata.version
+        
+        # Simple string comparison (assumes semantic versioning format)
+        return current_version != latest_version
+        
+    except requests.RequestException:
+        # If we can't check, assume no update is needed
+        console.print("[yellow]Warning:[/yellow] Could not check for updates. Network issue?")
+        return False
+
 def download_tailwind_binary(
     config: ProjectConfig,
     force: bool = False,
