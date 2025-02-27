@@ -17,7 +17,8 @@ from .toml_config import save_config
 def download_tailwind_binary(
     config: ProjectConfig,
     force: bool = False,
-    show_progress: bool = True
+    show_progress: bool = True,
+    existing_progress = None
 ) -> Path:
     """
     Unified download handler with version checks and progress control.
@@ -26,6 +27,7 @@ def download_tailwind_binary(
         config: ProjectConfig object with configuration settings
         force: Whether to force download even if already up to date
         show_progress: Whether to show download progress
+        existing_progress: An existing Progress object to use instead of creating a new one
         
     Returns:
         Path to the downloaded binary
@@ -54,7 +56,12 @@ def download_tailwind_binary(
         # Debug output to show which URL is being used
         console.print(f"[dim]Downloading from: {url}[/dim]")
         
-        _core_download(url, dest, show_progress)
+        if existing_progress:
+            # Use the existing progress bar
+            _download_with_existing_progress(url, dest, existing_progress)
+        else:
+            # Create a new progress bar
+            _core_download(url, dest, show_progress)
 
         # Post-download setup
         if platform.system() != "Windows":
@@ -171,4 +178,26 @@ def download_binary(style: Literal["daisy", "vanilla"]) -> Path:
     console.print(f"  Binary installed at: [green]{dest}[/green]")
     
     # Return absolute path
-    return dest.absolute() 
+    return dest.absolute()
+
+def _download_with_existing_progress(url: str, dest: Path, progress: Progress) -> None:
+    """
+    Download with an existing progress object.
+    
+    Args:
+        url: URL to download from
+        dest: Destination path to save the file
+        progress: Existing Progress object
+    """
+    response = requests.get(url, stream=True, timeout=(3.05, 30))
+    response.raise_for_status()
+    
+    # Create a task in the existing progress
+    task = progress.add_task("Downloading binary...", total=int(response.headers.get("content-length", 0)))
+    
+    # Stream the content
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with dest.open("wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+            progress.update(task, advance=len(chunk)) 

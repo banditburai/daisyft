@@ -300,7 +300,7 @@ def init(
             # Download Tailwind binary first
             task = progress.add_task("Setting up project...", total=100)
             progress.update(task, description="Downloading Tailwind CSS...", advance=10)
-            download_tailwind_binary(config, force=force)
+            download_tailwind_binary(config, force=force, existing_progress=progress)
             
             # Save config with valid binary path
             save_config(config, config_path)
