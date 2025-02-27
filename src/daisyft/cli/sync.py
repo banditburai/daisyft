@@ -23,14 +23,53 @@ def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
     
     if not css_file.exists() or force:
         logger.debug("Creating/updating CSS file")
-        css_content = [
-            '@import "tailwindcss";',
-            '@plugin "daisyui";'
-        ]
+        
+        # Create CSS content based on style and theme
+        if config.style == "daisy":
+            # For DaisyUI, include proper theme configuration
+            css_content = [
+                '@import "tailwindcss";',
+                '@plugin "daisyui" {',
+                f'  themes: {config.theme} --default;',
+                '  logs: false;',
+                '}'
+            ]
+            
+            # Add a comment to help users customize themes
+            css_content.extend([
+                '',
+                '/* To customize themes or add more themes, see:',
+                ' * https://daisyui.com/docs/themes/',
+                ' * ',
+                ' * Example:',
+                ' * @plugin "daisyui" {',
+                ' *   themes: light --default, dark --prefersdark, cupcake, corporate;',
+                ' * }',
+                ' *',
+                ' * Or add a custom theme:',
+                ' * @plugin "daisyui/theme" {',
+                ' *   name: "mytheme";',
+                ' *   --color-primary: #1EA1F1;',
+                ' *   --color-secondary: #0070BA;',
+                ' * }',
+                ' */',
+            ])
+        else:
+            # For vanilla Tailwind, just import Tailwind
+            css_content = [
+                '@import "tailwindcss";'
+            ]
+        
+        # Write the CSS file
         css_file.write_text("\n".join(css_content) + "\n")
+        console.print(f"[green]✓[/green] Updated CSS file at {css_file}")
     
     # Save any changes to the config
     save_config(config)
+    
+    # Provide helpful information about next steps
+    console.print("\n[bold]Project files synced successfully![/bold]")
+    console.print("Run [bold]daisyft build[/bold] to rebuild your CSS with the updated settings.")
     
     logger.debug("Sync completed successfully")
     return True

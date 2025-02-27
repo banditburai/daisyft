@@ -1,6 +1,14 @@
 # ============================================================================
 #  FastHTML + TailwindCSS{% if style == "daisy" %} + DaisyUI{% endif %} Simple Template
 # ============================================================================
+{% if style == "daisy" %}
+# Theme: {{ theme }}
+# To change the theme:
+# 1. Edit the data_theme value below
+# 2. Update your CSS file (see input.css)
+# 3. Run 'daisyft build' to rebuild your CSS
+# See https://daisyui.com/docs/themes/ for available themes and customization
+{% endif %}
 from fasthtml.common import *
 
 styles = Link(rel="stylesheet", href="/{{ paths.css }}/output.css", type="text/css")

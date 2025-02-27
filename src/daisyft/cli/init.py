@@ -56,12 +56,10 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
     answers["style"] = selected
     
     if answers["style"] == "daisy":
-        # Define theme choices
+        # Define theme choices - simplified to just light and dark
         theme_choices = [
             {"value": "dark", "name": "Dark mode (default)"},
-            {"value": "light", "name": "Light mode"},
-            {"value": "cupcake", "name": "Light and playful"},
-            {"value": "corporate", "name": "Professional and clean"}
+            {"value": "light", "name": "Light mode"}
         ]
         
         # Find default choice
@@ -145,9 +143,7 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
         if style == "daisy":
             theme_choices = [
                 {"value": "dark", "name": "Dark mode (default)"},
-                {"value": "light", "name": "Light mode"},
-                {"value": "cupcake", "name": "Light and playful"},
-                {"value": "corporate", "name": "Professional and clean"}
+                {"value": "light", "name": "Light mode"}
             ]
             
             # Use dictionary-based choices
@@ -427,8 +423,7 @@ def init(
             # If style changed, provide additional information
             if hasattr(config, 'previous_style') and config.previous_style != config.style:
                 console.print(f"\n[bold]Style changed from {config.previous_style} to {config.style}.[/bold]")
-                console.print("  • CSS input file has been updated")
-                console.print("  • Run [bold]daisyft build[/bold] to rebuild your CSS with the new style")
+                console.print("  • CSS input file has been updated")                
                 console.print("  • You may need to update your app file to use the new style settings")
                     
             console.print("\n[bold]Run [green]daisyft sync[/green] to ensure all files are up to date.[/bold]")
