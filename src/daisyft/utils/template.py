@@ -4,15 +4,9 @@ import jinja2
 from .console import console
 
 class TemplateContext(TypedDict):
-    """Type hint for template rendering context"""
-    style: str
-    theme: str
-    paths: dict[str, Path]
-    port: int
-    live: bool
-    host: str
-    components: dict[str, Any]
-    binary_metadata: dict
+    """Updated template context type"""
+    config: Any  # ProjectConfig instance
+    config_json: str  # JSON-serialized version
 
 def render_template(template_name: str, output_path: Path, context: TemplateContext) -> None:
     """Safely render a Jinja template to file"""

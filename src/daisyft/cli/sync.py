@@ -1,7 +1,7 @@
 import typer
 from pathlib import Path
 from typing import Optional
-from ..utils.config import ProjectConfig
+from ..utils.toml_config import ProjectConfig
 import logging
 from ..utils.console import console
 logger = logging.getLogger(__name__)
@@ -29,6 +29,9 @@ def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
         ]
         css_file.write_text("\n".join(css_content) + "\n")
     
+    # Save any changes to the config
+    config.save()
+    
     logger.debug("Sync completed successfully")
     return True
 
@@ -37,7 +40,7 @@ def sync(
 ) -> None:
     """Sync project files and rebuild CSS"""
     
-    if not Path("daisyft.conf.py").exists():
+    if not Path("daisyft.toml").exists():
         console.print("[red]Error:[/red] Not in a daisyft project.")
         console.print("\nTo create a new project, run:")
         console.print("  [bold]daisyft init[/bold]")

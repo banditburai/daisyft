@@ -59,7 +59,7 @@ Key changes:
 
 ### 2. Project Initialization (`init`)
 The init command will:
-- Create Python configuration file (daisyft.conf.py)
+- Create TOML configuration file (daisyft.toml)
 - Set up project structure:
 
   ```
@@ -72,7 +72,7 @@ The init command will:
   │   ├── js/
   │   ├── sprite.svg
   │   └── icons/
-  └── daisyft.conf.py
+  └── daisyft.toml
   ```
 
 - Install required dependencies:
@@ -258,7 +258,7 @@ Components can be:
 
 
 
-daisyft.conf.py
+daisyft.toml
 
 ```python
 from pathlib import Path

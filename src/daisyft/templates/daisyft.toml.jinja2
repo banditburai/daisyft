@@ -1,0 +1,42 @@
+# DaisyFT Project Configuration
+# Generated on {{ now.strftime('%Y-%m-%d %H:%M:%S') }}
+# Edit this file to customize your project settings
+# After changing settings, run 'daisyft sync' to update your project
+
+[project]
+style = "{{ style }}"
+theme = "{{ theme }}"
+app_path = "{{ app_path }}"
+include_icons = {{ include_icons }}
+verbose = {{ verbose }}
+
+[server]
+host = "{{ host }}"
+port = {{ port }}
+live = {{ live }}
+
+[paths]
+components = "{{ paths.components }}"
+ui = "{{ paths.ui }}"
+static = "{{ paths.static }}"
+css = "{{ paths.css }}"
+js = "{{ paths.js }}"
+icons = "{{ paths.icons }}"
+
+{% if binary_metadata %}
+[binary]
+version = "{{ binary_metadata.version }}"
+downloaded_at = "{{ binary_metadata.downloaded_at.isoformat() }}"
+sha = "{{ binary_metadata.sha }}"
+release_id = {{ binary_metadata.release_id }}
+{% endif %}
+
+{% if components %}
+[components]
+{% for name, comp in components.items() %}
+[components.{{ name }}]
+name = "{{ comp.name }}"
+type = "{{ comp.type }}"
+path = "{{ comp.path }}"
+{% endfor %}
+{% endif %} 

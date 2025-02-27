@@ -22,6 +22,7 @@ class InitOptions:
     components_dir: Path = Path("components")
     static_dir: Path = Path("static")
     verbose: bool = True
+    template: str = "standard"  # New field for template selection
 
 @dataclass(frozen=True)
 class TailwindReleaseInfo:
@@ -62,6 +63,13 @@ class ComponentMetadata:
     type: str  # RegistryType
     path: Path
 
+    def __json__(self) -> dict:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "path": str(self.path)
+        }
+
 @dataclass
 class ProjectConfig:
     """Project configuration for daisyft"""
@@ -73,6 +81,7 @@ class ProjectConfig:
     host: str = "localhost"
     port: int = 5001
     live: bool = True 
+    template: str = "standard"  # New field for template selection
     paths: Dict[str, Path] = field(default_factory=lambda: {
         "components": Path("components"),
         "ui": Path("components/ui"),
@@ -113,9 +122,12 @@ class ProjectConfig:
         return getattr(module, "config", cls())
 
     def save(self, path: Path = Path("daisyft.conf.py")) -> None:
-        """Save configuration to file with default path"""
+        """Save configuration to file"""
+        from json import dumps
+        
         context = {
-            "config": self
+            "config": self,
+            "config_json": dumps(self.__json__(), indent=2)
         }
         render_template("daisyft.conf.py.jinja2", path, context=context)
 
@@ -177,6 +189,7 @@ class ProjectConfig:
         self.app_path = options.app_path
         self.include_icons = options.include_icons
         self.verbose = options.verbose
+        self.template = options.template  # Add template field
         
         # Update paths
         self.paths = {
@@ -186,6 +199,32 @@ class ProjectConfig:
             "css": options.static_dir / "css",
             "js": options.static_dir / "js",
             "icons": options.static_dir / "icons" if options.include_icons else Path("_disabled")
+        }
+
+    def __json__(self) -> dict:
+        """Custom serialization for template rendering"""
+        return {
+            "style": self.style,
+            "theme": self.theme,
+            "app_path": str(self.app_path),
+            "include_icons": bool(self.include_icons),
+            "verbose": bool(self.verbose),
+            "host": self.host,
+            "port": int(self.port),
+            "live": bool(self.live),
+            "template": self.template,  # Add template field
+            "paths": {k: str(v) for k, v in self.paths.items()},
+            "binary_metadata": {
+                "version": self.binary_metadata.version if self.binary_metadata else "unknown"
+            } if self.binary_metadata else None,
+            "components": {
+                name: {
+                    "name": comp.name,
+                    "type": comp.type,
+                    "path": str(comp.path)
+                }
+                for name, comp in self.components.items()
+            }
         }
 
 PlatformName = Literal["macos", "linux", "windows"]

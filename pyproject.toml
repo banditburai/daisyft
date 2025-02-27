@@ -14,11 +14,13 @@ dependencies = [
     "requests>=2.32.3",
     "rich>=13.9.4",
     "typer>=0.15.1",
+    "tomli>=2.0.1",
+    "tomli-w>=1.0.0",
 ]
 
 [tool.uv]
 dev-dependencies = [
-     "pytest>=8.3.4",
+    "pytest>=8.3.4",
     "responses>=0.25.6",
     ]
 

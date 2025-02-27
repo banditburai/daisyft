@@ -4,7 +4,7 @@ import subprocess
 import os
 import sys
 import time
-from ..utils.config import ProjectConfig
+from ..utils.toml_config import ProjectConfig
 from ..utils.process import ProcessManager
 from ..utils.console import console
 from ..utils.command_utils import (
@@ -20,7 +20,7 @@ def dev(
     output_css: str = typer.Option(None, "--output", "-o", help="Output CSS file path"),
 ) -> None:
     """Start development server with CSS watching"""
-    config = ProjectConfig.load(Path("daisyft.conf.py"))
+    config = ProjectConfig.load(Path("daisyft.toml"))
     
     # Resolve paths using shared utility
     input_css_path, output_css_path = resolve_css_paths(config, input_css, output_css)

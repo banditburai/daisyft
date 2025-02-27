@@ -4,11 +4,13 @@ from typing import Optional, List
 from daisyft.cli import init, add, config, build, dev, run, sync
 from .registry import commands as registry_commands
 from ..utils.console import console
+from ..utils.toml_config import ProjectConfig
 
 app = typer.Typer(
     name="daisyft",
-    help="DaisyUI/Tailwind/Motion components for FastHTML",
-    no_args_is_help=True
+    help="DaisyUI/Tailwind/Motion components for FastHTML projects",
+    no_args_is_help=True,
+    rich_markup_mode="rich"
 )
 
 # Register commands
@@ -26,15 +28,23 @@ app.add_typer(registry_commands.registry_app, name="registry")
 @app.callback()
 def callback(ctx: typer.Context):
     """
-    ft-daisy CLI - DaisyUI components for FastHTML projects
+    [bold blue]DaisyFT CLI[/bold blue] - DaisyUI components for FastHTML projects
     
-    Run 'daisyft init' to create a new project or 'daisyft add' to add components.
+    A toolkit for building beautiful web interfaces with FastHTML, Tailwind CSS, and DaisyUI.
+    
+    [bold]Getting Started:[/bold]
+    - Run [green]daisyft init[/green] to create a new project with minimal setup
+    - Run [green]daisyft init --advanced[/green] for more configuration options
+    - Run [green]daisyft dev[/green] to start the development server
+    - Run [green]daisyft add button[/green] to add the Button component
+    
+    [dim]For more information, visit: https://github.com/banditburai/daisyft[/dim]
     """
     # Skip checks if we're running init
     if ctx.invoked_subcommand == "init":
         return
 
-    if not Path("daisyft.conf.py").exists():
+    if not Path("daisyft.toml").exists():
         if typer.confirm(
             "[yellow]No daisyft configuration found.[/yellow] Would you like to initialize a new project?",
             default=True
@@ -47,12 +57,9 @@ def callback(ctx: typer.Context):
     
     try:
         # Try to load config to validate it
-        from importlib.util import spec_from_file_location, module_from_spec
-        spec = spec_from_file_location("daisyft_conf", "daisyft.conf.py")
-        config_module = module_from_spec(spec)
-        spec.loader.exec_module(config_module)
+        config = ProjectConfig.load(Path("daisyft.toml"))
     except Exception as e:
-        console.print(f"[red]Error:[/red] Invalid daisyft.conf.py configuration: {e}")
+        console.print(f"[red]Error:[/red] Invalid daisyft.toml configuration: {e}")
         if typer.confirm("Would you like to reinitialize the project?", default=False):
             ctx.invoke(init.init)
         raise typer.Exit(1)
