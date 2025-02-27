@@ -32,8 +32,8 @@ TEMPLATES = {
 def handle_basic_options(answers: Dict[str, Any]) -> None:
     """Handle the basic, most important configuration options"""
     style_choices = [
-        Choice(value="daisy", name="DaisyUI components (recommended)"),
-        Choice(value="vanilla", name="Vanilla Tailwind CSS")
+        Choice("daisy", "DaisyUI components (recommended)"),
+        Choice("vanilla", "Vanilla Tailwind CSS")
     ]
     
     answers["style"] = questionary.select(
@@ -44,10 +44,10 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
     
     if answers["style"] == "daisy":
         theme_choices = [
-            Choice(value="dark", name="Dark mode (default)"),
-            Choice(value="light", name="Light mode"),
-            Choice(value="cupcake", name="Light and playful"),
-            Choice(value="corporate", name="Professional and clean")
+            Choice("dark", "Dark mode (default)"),
+            Choice("light", "Light mode"),
+            Choice("cupcake", "Light and playful"),
+            Choice("corporate", "Professional and clean")
         ]
         
         answers["theme"] = questionary.select(
@@ -104,8 +104,8 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
         
         # Just ask the most essential questions
         style_choices = [
-            Choice(value="daisy", name="DaisyUI components (recommended)"),
-            Choice(value="vanilla", name="Vanilla Tailwind CSS")
+            Choice("daisy", "DaisyUI components (recommended)"),
+            Choice("vanilla", "Vanilla Tailwind CSS")
         ]
         
         style = questionary.select(
@@ -116,10 +116,10 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
         
         if style == "daisy":
             theme_choices = [
-                Choice(value="dark", name="Dark mode (default)"),
-                Choice(value="light", name="Light mode"),
-                Choice(value="cupcake", name="Light and playful"),
-                Choice(value="corporate", name="Professional and clean")
+                Choice("dark", "Dark mode (default)"),
+                Choice("light", "Light mode"),
+                Choice("cupcake", "Light and playful"),
+                Choice("corporate", "Professional and clean")
             ]
             
             theme = questionary.select(
@@ -165,7 +165,7 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
     try:
         # Select template first
         template_choices = [
-            Choice(value=name, name=info["description"]) 
+            Choice(name, info["description"]) 
             for name, info in TEMPLATES.items()
         ]
         
