@@ -25,7 +25,7 @@ TEMPLATES = {
     "standard": {
         "name": "Standard",
         "description": "Complete setup with example components",
-        "files": ["input.css", "main.py", "example.py"]
+        "files": ["input.css", "main.py"]
     },
 }
 
@@ -162,7 +162,7 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
             components_dir=Path("components"),
             static_dir=Path("static"),
             verbose=True,
-            template="standard"
+            template="minimal"
         )
     
     # Advanced setup with all options
@@ -299,7 +299,11 @@ def init(
         ) as progress:
             # Download Tailwind binary first
             task = progress.add_task("Setting up project...", total=100)
-            progress.update(task, description="Downloading Tailwind CSS...", advance=10)
+            
+            # Clearer messaging about what's being downloaded
+            binary_type = "DaisyUI-enhanced Tailwind CSS" if config.style == "daisy" else "Vanilla Tailwind CSS"
+            progress.update(task, description=f"Downloading {binary_type} binary...", advance=10)
+            
             download_tailwind_binary(config, force=force, existing_progress=progress)
             
             # Save config with valid binary path
@@ -334,14 +338,6 @@ def init(
                         "host": config.host
                     }
                 )
-                                
-                # Add example component if using standard template
-                if config.template == "standard":
-                    render_template_safe(
-                        "example.py.jinja2",
-                        project_path / "example.py",
-                        {"style": config.style}
-                    )
                 
                 # Install required dependencies
                 if config.include_icons:

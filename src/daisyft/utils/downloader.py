@@ -33,9 +33,7 @@ def download_tailwind_binary(
         Path to the downloaded binary
     """
     try:
-        # Debug output to show which style is being used
-        console.print(f"[dim]Using style: {config.style}[/dim]")
-        
+        # Remove redundant debug output
         release_info = get_release_info(config.style)
         dest = get_bin_dir() / get_tailwind_binary_name()
 
@@ -53,8 +51,10 @@ def download_tailwind_binary(
 
         # Perform download
         url = f"{TailwindReleaseInfo.get_download_url(config.style)}{dest.name}"
-        # Debug output to show which URL is being used
-        console.print(f"[dim]Downloading from: {url}[/dim]")
+        
+        # Only show URL in verbose mode or when no progress bar
+        if not existing_progress and not show_progress:
+            console.print(f"Downloading from: {url}")
         
         if existing_progress:
             # Use the existing progress bar
@@ -130,7 +130,6 @@ def get_release_info(style: str = "daisy") -> dict:
         Dictionary with release information
     """
     url = TailwindReleaseInfo.get_api_url(style)
-    console.print(f"[dim]Fetching release info from: {url}[/dim]")
     
     try:
         response = requests.get(url, timeout=(3.05, 30))
