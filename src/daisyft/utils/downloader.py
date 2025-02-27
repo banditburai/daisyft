@@ -42,11 +42,18 @@ def download_tailwind_binary(
             current = config.binary_metadata.version
             latest = release_info.get("tag_name", "unknown")
             
-            if current == latest:
+            # Force download if style has changed
+            style_changed = False
+            if hasattr(config, 'previous_style') and config.previous_style != config.style:
+                style_changed = True
+                force = True
+                console.print(f"[yellow]Style changed from {config.previous_style} to {config.style}, downloading new binary...[/yellow]")
+            
+            if current == latest and not style_changed:
                 console.print(f"[green]✓[/green] Already on latest version {latest}")
                 return dest
             
-            if not typer.confirm(f"Update from {current} to {latest}?"):
+            if not force and not typer.confirm(f"Update from {current} to {latest}?"):
                 return dest
 
         # Perform download

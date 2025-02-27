@@ -81,6 +81,9 @@ class ProjectConfig:
     include_datastar: bool = False
     verbose: bool = True
     
+    # For tracking style changes during reinitialization
+    previous_style: Optional[str] = None
+    
     # Server settings
     host: str = "127.0.0.1"
     port: int = 8000

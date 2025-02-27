@@ -292,14 +292,22 @@ def init(
         # Get configuration options
         # Always get user options when reinitializing with advanced flag
         if not config_exists or (config_exists and advanced):
+            # Store the previous style before updating
+            previous_style = config.style if config_exists else None
+            
             # Override template if specified in command line
             if template and template in TEMPLATES:
                 options = get_user_options(defaults, advanced)
                 options.template = template
             else:
                 options = get_user_options(defaults, advanced)
-                
+            
+            # Update configuration with new options
             config.update_from_options(options)
+            
+            # Track the previous style for binary download logic
+            if previous_style:
+                config.previous_style = previous_style
         
         with Progress(
             SpinnerColumn(),
