@@ -7,6 +7,17 @@ authors = [
     { name = "firefly", email = "promptsiren@gmail.com" }
 ]
 requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["fasthtml", "tailwind", "daisyui", "web", "ui", "components"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP",
+]
 dependencies = [
     "jinja2>=3.1.5",
     "python-fasthtml>=0.12.0",
@@ -17,6 +28,11 @@ dependencies = [
     "tomli>=2.0.1",
     "tomli-w>=1.0.0",
 ]
+
+[project.urls]
+"Homepage" = "https://daisyft.com"
+"Source" = "https://github.com/banditburai/daisyft"
+"Bug Tracker" = "https://github.com/banditburai/daisyft/issues"
 
 [tool.uv]
 dev-dependencies = [
