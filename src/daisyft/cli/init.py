@@ -31,25 +31,29 @@ TEMPLATES = {
 # Simplified question handlers with progressive disclosure
 def handle_basic_options(answers: Dict[str, Any]) -> None:
     """Handle the basic, most important configuration options"""
+    style_choices = [
+        Choice(value="daisy", name="DaisyUI components (recommended)"),
+        Choice(value="vanilla", name="Vanilla Tailwind CSS")
+    ]
+    
     answers["style"] = questionary.select(
         "Style framework:",
-        choices=[
-            Choice("daisy", "DaisyUI components (recommended)"),
-            Choice("vanilla", "Vanilla Tailwind CSS")
-        ],
-        default="daisy"
+        choices=style_choices,
+        default=next((c for c in style_choices if c.value == answers["style"]), style_choices[0])
     ).ask()
     
     if answers["style"] == "daisy":
+        theme_choices = [
+            Choice(value="dark", name="Dark mode (default)"),
+            Choice(value="light", name="Light mode"),
+            Choice(value="cupcake", name="Light and playful"),
+            Choice(value="corporate", name="Professional and clean")
+        ]
+        
         answers["theme"] = questionary.select(
             "Theme:",
-            choices=[
-                Choice("dark", "Dark mode (default)"),
-                Choice("light", "Light mode"),
-                Choice("cupcake", "Light and playful"),
-                Choice("corporate", "Professional and clean"),
-            ],
-            default="dark"
+            choices=theme_choices,
+            default=next((c for c in theme_choices if c.value == answers["theme"]), theme_choices[0])
         ).ask()
     else:
         answers["theme"] = "default"
@@ -58,27 +62,27 @@ def handle_advanced_options(answers: Dict[str, Any]) -> None:
     """Handle more advanced configuration options"""
     answers["app_path"] = questionary.text(
         "FastHTML app entry point:", 
-        default="main.py"
+        default=answers["app_path"]
     ).ask()
     
     answers["components_dir"] = questionary.text(
         "Components directory:", 
-        default="components"
+        default=answers["components_dir"]
     ).ask()
     
     answers["static_dir"] = questionary.text(
         "Static assets directory:", 
-        default="static"
+        default=answers["static_dir"]
     ).ask()
     
     answers["include_icons"] = questionary.confirm(
         "Include ft-icons package?", 
-        default=True
+        default=answers["include_icons"]
     ).ask()
     
     answers["verbose"] = questionary.confirm(
         "Include detailed documentation?", 
-        default=True
+        default=answers["verbose"]
     ).ask()
 
 def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOptions:
@@ -99,25 +103,29 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
         theme = "dark"
         
         # Just ask the most essential questions
+        style_choices = [
+            Choice(value="daisy", name="DaisyUI components (recommended)"),
+            Choice(value="vanilla", name="Vanilla Tailwind CSS")
+        ]
+        
         style = questionary.select(
             "Style framework:",
-            choices=[
-                Choice("daisy", "DaisyUI components (recommended)"),
-                Choice("vanilla", "Vanilla Tailwind CSS")
-            ],
-            default="daisy"
+            choices=style_choices,
+            default=style_choices[0]  # Use the first choice object as default
         ).ask()
         
         if style == "daisy":
+            theme_choices = [
+                Choice(value="dark", name="Dark mode (default)"),
+                Choice(value="light", name="Light mode"),
+                Choice(value="cupcake", name="Light and playful"),
+                Choice(value="corporate", name="Professional and clean")
+            ]
+            
             theme = questionary.select(
                 "Theme:",
-                choices=[
-                    Choice("dark", "Dark mode (default)"),
-                    Choice("light", "Light mode"),
-                    Choice("cupcake", "Light and playful"),
-                    Choice("corporate", "Professional and clean"),
-                ],
-                default="dark"
+                choices=theme_choices,
+                default=theme_choices[0]  # Use the first choice object as default
             ).ask()
         else:
             theme = "default"
@@ -156,13 +164,15 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
 
     try:
         # Select template first
+        template_choices = [
+            Choice(value=name, name=info["description"]) 
+            for name, info in TEMPLATES.items()
+        ]
+        
         answers["template"] = questionary.select(
             "Select a template:",
-            choices=[
-                Choice(name, info["description"]) 
-                for name, info in TEMPLATES.items()
-            ],
-            default="standard"
+            choices=template_choices,
+            default=next((c for c in template_choices if c.value == "standard"), template_choices[0])
         ).ask()
         
         # Always ask for basic options
