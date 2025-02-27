@@ -4,7 +4,7 @@ from typing import Optional, List
 from daisyft.cli import init, add, config, build, dev, run, sync
 from .registry import commands as registry_commands
 from ..utils.console import console
-from ..utils.toml_config import ProjectConfig
+from ..utils.toml_config import load_config
 
 app = typer.Typer(
     name="daisyft",
@@ -57,7 +57,7 @@ def callback(ctx: typer.Context):
     
     try:
         # Try to load config to validate it
-        config = ProjectConfig.load(Path("daisyft.toml"))
+        config = load_config(Path("daisyft.toml"))
     except Exception as e:
         console.print(f"[red]Error:[/red] Invalid daisyft.toml configuration: {e}")
         if typer.confirm("Would you like to reinitialize the project?", default=False):

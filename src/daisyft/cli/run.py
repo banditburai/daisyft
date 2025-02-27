@@ -4,7 +4,8 @@ import subprocess
 import os
 import sys
 import time
-from ..utils.toml_config import ProjectConfig
+from ..utils.config import ProjectConfig
+from ..utils.toml_config import load_config
 from ..utils.process import ProcessManager
 from ..utils.console import console
 from ..utils.command_utils import (
@@ -20,7 +21,7 @@ def run(
     output_css: str = typer.Option(None, "--output", "-o", help="Output CSS file path"),
 ) -> None:
     """Build CSS and run the FastHTML application"""
-    config = ProjectConfig.load(Path("daisyft.toml"))
+    config = load_config(Path("daisyft.toml"))
     
     # Use config values unless overridden
     host = host or config.host

@@ -1,7 +1,7 @@
 import typer
 from pathlib import Path
 import subprocess
-from ..utils.toml_config import ProjectConfig
+from ..utils.toml_config import load_config
 from ..utils.console import console  
 from ..utils.command_utils import validate_binary, build_css_command, resolve_css_paths
 
@@ -11,7 +11,7 @@ def build(
     minify: bool = typer.Option(False, "--minify", "-m", help="Minify output CSS")
 ) -> None:
     """Build Tailwind CSS"""
-    config = ProjectConfig.load(Path("daisyft.toml"))
+    config = load_config(Path("daisyft.toml"))
     input_path, output_path = resolve_css_paths(config, input_path, output_path)
     binary_path = validate_binary(config)
     

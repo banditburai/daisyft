@@ -155,8 +155,6 @@ def download_binary(style: Literal["daisy", "vanilla"]) -> Path:
     # Final destination path
     dest = get_bin_dir() / binary_name
     
-    console.print(f"  Downloading binary to: [cyan]{dest}[/cyan]")
-    
     # Use the project's URL construction
     base_url = TailwindReleaseInfo.get_download_url(style)
     url = f"{base_url}{binary_name}"
@@ -191,8 +189,9 @@ def _download_with_existing_progress(url: str, dest: Path, progress: Progress) -
     response = requests.get(url, stream=True, timeout=(3.05, 30))
     response.raise_for_status()
     
-    # Create a task in the existing progress
-    task = progress.add_task("Downloading binary...", total=int(response.headers.get("content-length", 0)))
+    # Create a task in the existing progress - but with a more specific message
+    # that doesn't duplicate the parent message
+    task = progress.add_task("Fetching file...", total=int(response.headers.get("content-length", 0)))
     
     # Stream the content
     dest.parent.mkdir(parents=True, exist_ok=True)

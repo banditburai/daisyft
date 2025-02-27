@@ -1,6 +1,7 @@
 from typing import Optional
 import typer
-from daisyft.utils.config import ProjectConfig
+from pathlib import Path
+from daisyft.utils.toml_config import load_config
 from daisyft.utils.console import console
 
 app = typer.Typer()
@@ -14,7 +15,7 @@ def config(
     ),
 ):
     """Configure project settings"""
-    config = ProjectConfig.load()
+    config = load_config(Path("daisyft.toml"))
     
     if verbose is not None:
         config.verbose = verbose

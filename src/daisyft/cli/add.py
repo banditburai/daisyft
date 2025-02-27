@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, Type
 from ..registry.base import RegistryBase
 from ..registry.decorators import Registry
-from ..utils.toml_config import ProjectConfig
+from ..utils.toml_config import load_config
 from ..utils.console import console
 from rich.panel import Panel
 from ..utils.package import PackageManager
@@ -30,7 +30,7 @@ def add(
         console.print("[red]Error:[/red] Not in a daisyft project. Run 'daisyft init' first.")
         raise typer.Exit(1)
     
-    config = ProjectConfig.load()
+    config = load_config(Path("daisyft.toml"))
     
     # Show preview message
     console.print(Panel(

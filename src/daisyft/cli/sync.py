@@ -1,7 +1,8 @@
 import typer
 from pathlib import Path
 from typing import Optional
-from ..utils.toml_config import ProjectConfig
+from ..utils.config import ProjectConfig
+from ..utils.toml_config import load_config
 import logging
 from ..utils.console import console
 logger = logging.getLogger(__name__)
@@ -47,5 +48,5 @@ def sync(
         console.print("\nOr cd into an existing daisyft project directory.")
         raise typer.Exit(1)
     
-    config = ProjectConfig.load()
+    config = load_config(Path("daisyft.toml"))
     sync_with_config(config, force) 
