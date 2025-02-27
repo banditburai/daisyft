@@ -31,17 +31,28 @@ def check_for_binary_update(config: ProjectConfig) -> bool:
         
         # If no binary metadata exists, an update is needed
         if not config.binary_metadata:
+            console.print("[yellow]No binary metadata found. Download required.[/yellow]")
             return True
             
         # Check if style has changed
         if hasattr(config, 'previous_style') and config.previous_style != config.style:
+            console.print(f"[yellow]Style changed from {config.previous_style} to {config.style}.[/yellow]")
             return True
             
         # Compare versions
         current_version = config.binary_metadata.version
         
+        # Log the versions for debugging
+        console.print(f"Current version: {current_version}")
+        console.print(f"Latest version: {latest_version}")
+        
         # Simple string comparison (assumes semantic versioning format)
-        return current_version != latest_version
+        if current_version != latest_version:
+            console.print(f"[yellow]New version available: {latest_version} (current: {current_version})[/yellow]")
+            return True
+        else:
+            console.print(f"[green]Already on latest version: {current_version}[/green]")
+            return False
         
     except requests.RequestException:
         # If we can't check, assume no update is needed

@@ -24,16 +24,12 @@ class BinaryMetadata:
     """Metadata about the Tailwind binary."""
     version: str
     downloaded_at: datetime
-    sha: str
-    release_id: int
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary for serialization."""
         return {
             "version": self.version,
-            "downloaded_at": self.downloaded_at.isoformat(),
-            "sha": self.sha,
-            "release_id": self.release_id
+            "downloaded_at": self.downloaded_at.isoformat()
         }
     
     @classmethod
@@ -42,11 +38,17 @@ class BinaryMetadata:
         if not data:
             return None
         
+        # Filter to only include the fields we care about
+        filtered_data = {
+            "version": data.get("version", "unknown"),
+            "downloaded_at": data.get("downloaded_at")
+        }
+        
         # Convert ISO format string to datetime
-        if isinstance(data.get('downloaded_at'), str):
-            data['downloaded_at'] = datetime.fromisoformat(data['downloaded_at'])
+        if isinstance(filtered_data['downloaded_at'], str):
+            filtered_data['downloaded_at'] = datetime.fromisoformat(filtered_data['downloaded_at'])
             
-        return cls(**data)
+        return cls(**filtered_data)
 
 @dataclass
 class ComponentMetadata:
@@ -150,7 +152,5 @@ class ProjectConfig:
         """Update binary metadata from release info."""
         self.binary_metadata = BinaryMetadata(
             version=release_info.get("tag_name", "unknown"),
-            downloaded_at=datetime.now(),
-            sha=release_info.get("target_commitish", "unknown"),
-            release_id=release_info.get("id", 0)
+            downloaded_at=datetime.now()
         ) 

@@ -29,8 +29,6 @@ icons = "{{ paths.icons }}"
 [binary]
 version = "{{ binary_metadata.version }}"
 downloaded_at = "{{ binary_metadata.downloaded_at.isoformat() }}"
-sha = "{{ binary_metadata.sha }}"
-release_id = {{ binary_metadata.release_id }}
 {% endif %}
 
 {% if components %}

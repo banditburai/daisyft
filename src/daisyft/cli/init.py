@@ -409,9 +409,9 @@ def init(
             
             # Show command examples
             console.print("\n[bold]Example commands:[/bold]")
-            console.print("  daisyft dev      # Start development server")
+            console.print("  daisyft dev      # Start development server (with live CSS watch)")
             console.print("  daisyft build    # Build production CSS")
-            console.print("  daisyft run      # Run FastHTML app")
+            console.print("  daisyft run      # Builds CSS and Runs FastHTML app")
             
             if not advanced and not defaults:
                 console.print("\n[dim]Note: You used the quick setup. For more configuration options, run:[/dim]")
