@@ -105,6 +105,11 @@ def handle_advanced_options(answers: Dict[str, Any]) -> None:
         default=answers["include_icons"]
     ).ask()
     
+    answers["include_datastar"] = questionary.confirm(
+        "Include ft-datastar package?", 
+        default=answers["include_datastar"]
+    ).ask()
+    
     answers["verbose"] = questionary.confirm(
         "Include detailed documentation?", 
         default=answers["verbose"]
@@ -158,7 +163,8 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
             style=style,
             theme=theme,
             app_path=Path("main.py"),
-            include_icons=True,
+            include_icons=False,
+            include_datastar=False,
             components_dir=Path("components"),
             static_dir=Path("static"),
             verbose=True,
@@ -179,7 +185,8 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
         "style": "daisy",
         "theme": "dark",
         "app_path": "main.py",
-        "include_icons": True,
+        "include_icons": False,
+        "include_datastar": False,
         "components_dir": "components",
         "static_dir": "static",
         "verbose": True,
@@ -217,6 +224,7 @@ def get_user_options(defaults: bool = False, advanced: bool = False) -> InitOpti
             theme=answers["theme"],
             app_path=Path(answers["app_path"]),
             include_icons=answers["include_icons"],
+            include_datastar=answers["include_datastar"],
             components_dir=Path(answers["components_dir"]),
             static_dir=Path(answers["static_dir"]),
             verbose=answers["verbose"],
@@ -282,7 +290,8 @@ def init(
                 return
         
         # Get configuration options
-        if not config_exists:
+        # Always get user options when reinitializing with advanced flag
+        if not config_exists or (config_exists and advanced):
             # Override template if specified in command line
             if template and template in TEMPLATES:
                 options = get_user_options(defaults, advanced)
@@ -341,7 +350,7 @@ def init(
                 
                 # Install required dependencies
                 if config.include_icons:
-                    progress.update(task, description="Installing dependencies...", advance=10)
+                    progress.update(task, description="Installing ft-icons...", advance=5)
                     try:
                         # Use our new PackageManager to install ft-icons
                         PackageManager.install(
@@ -351,6 +360,19 @@ def init(
                         )
                     except Exception as e:
                         console.print(f"[yellow]Warning:[/yellow] Could not install ft-icons: {e}")
+                        console.print("You can install it manually later with your package manager of choice.")
+                
+                if config.include_datastar:
+                    progress.update(task, description="Installing ft-datastar...", advance=5)
+                    try:
+                        # Use our new PackageManager to install ft-datastar
+                        PackageManager.install(
+                            "git+https://github.com/banditburai/ft-datastar.git",
+                            manager=package_manager,
+                            quiet=True
+                        )
+                    except Exception as e:
+                        console.print(f"[yellow]Warning:[/yellow] Could not install ft-datastar: {e}")
                         console.print("You can install it manually later with your package manager of choice.")
                 
             progress.update(task, description="Finalizing setup...", advance=40)

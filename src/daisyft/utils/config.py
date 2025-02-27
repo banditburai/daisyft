@@ -12,7 +12,8 @@ class InitOptions:
     style: str = "daisy"
     theme: str = "dark"
     app_path: Path = Path("main.py")
-    include_icons: bool = True
+    include_icons: bool = False
+    include_datastar: bool = False
     components_dir: Path = Path("components")
     static_dir: Path = Path("static")
     verbose: bool = True
@@ -76,7 +77,8 @@ class ProjectConfig:
     style: str = "daisy"
     theme: str = "dark"
     app_path: Union[str, Path] = "main.py"
-    include_icons: bool = True
+    include_icons: bool = False
+    include_datastar: bool = False
     verbose: bool = True
     
     # Server settings
@@ -110,6 +112,7 @@ class ProjectConfig:
         self.theme = options.theme
         self.app_path = options.app_path
         self.include_icons = options.include_icons
+        self.include_datastar = options.include_datastar
         self.verbose = options.verbose
         self.template = options.template
         

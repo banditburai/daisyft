@@ -24,9 +24,8 @@ def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
     if not css_file.exists() or force:
         logger.debug("Creating/updating CSS file")
         css_content = [
-            "@tailwind base;",
-            "@tailwind components;",
-            "@tailwind utilities;"
+            '@import "tailwindcss";',
+            '@plugin "daisyui";'
         ]
         css_file.write_text("\n".join(css_content) + "\n")
     
