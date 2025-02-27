@@ -5,6 +5,7 @@
 
 [project]
 style = "{{ style }}"
+{% if previous_style %}previous_style = "{{ previous_style }}"{% endif %}
 theme = "{{ theme }}"
 app_path = "{{ app_path }}"
 include_icons = {{ include_icons }}

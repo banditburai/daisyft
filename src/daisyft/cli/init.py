@@ -282,8 +282,9 @@ def init(
         config_exists = config.is_initialized
 
         if config_exists and not force:
+            console.print("[yellow]Project already initialized.[/yellow]")
             if not typer.confirm(
-                "[yellow]Project already initialized.[/yellow] Do you want to reinitialize?",
+                "Do you want to reinitialize?",
                 default=False
             ):
                 console.print("[yellow]Initialization cancelled.[/yellow]")
@@ -326,6 +327,9 @@ def init(
             # Save config with valid binary path
             save_config(config, config_path)
 
+            # Check if we need to update template files due to style change
+            style_changed = hasattr(config, 'previous_style') and config.previous_style != config.style
+            
             if not config_exists:
                 # Create project structure
                 progress.update(task, description="Creating directories...", advance=20)
@@ -383,6 +387,47 @@ def init(
                         console.print(f"[yellow]Warning:[/yellow] Could not install ft-datastar: {e}")
                         console.print("You can install it manually later with your package manager of choice.")
                 
+            elif style_changed:
+                # If style changed during reinitialization, update CSS input file
+                progress.update(task, description="Updating CSS for new style...", advance=20)
+                render_template_safe(
+                    "input.css.jinja2",
+                    project_path / config.paths["css"] / "input.css",
+                    {"style": config.style, "components": {}}
+                )
+                
+                # Ask user if they want to update main.py
+                if typer.confirm(
+                    f"Style changed from {config.previous_style} to {config.style}. Update main.py with new style settings?",
+                    default=True
+                ):
+                    progress.update(task, description="Updating main.py...", advance=10)
+                    # Backup the original file
+                    backup_path = project_path / f"{config.app_path}.bak"
+                    try:
+                        original_path = project_path / config.app_path
+                        if original_path.exists():
+                            with open(original_path, 'r') as src, open(backup_path, 'w') as dst:
+                                dst.write(src.read())
+                            console.print(f"[green]✓[/green] Backed up original {config.app_path} to {backup_path}")
+                        
+                        # Generate new main.py
+                        render_template_safe(
+                            "main.py.jinja2",
+                            project_path / config.app_path,
+                            {
+                                "style": config.style,
+                                "theme": config.theme,
+                                "paths": config.paths,
+                                "port": config.port,
+                                "live": config.live,
+                                "host": config.host
+                            }
+                        )
+                    except Exception as e:
+                        console.print(f"[yellow]Warning:[/yellow] Could not update main.py: {e}")
+                        console.print("You may need to manually update your app file to use the new style settings.")
+            
             progress.update(task, description="Finalizing setup...", advance=40)
         
         # Show success message and next steps
@@ -402,6 +447,21 @@ def init(
             if not advanced and not defaults:
                 console.print("\n[dim]Note: You used the quick setup. For more configuration options, run:[/dim]")
                 console.print("  daisyft init --advanced")
+        else:
+            # Show reinitialization message
+            console.print("\n[bold]Project reinitialized with updated settings.[/bold]")
+            
+            # If style changed, provide additional information
+            if hasattr(config, 'previous_style') and config.previous_style != config.style:
+                console.print(f"\n[bold]Style changed from {config.previous_style} to {config.style}.[/bold]")
+                console.print("  • CSS input file has been updated")
+                console.print("  • Run [bold]daisyft build[/bold] to rebuild your CSS with the new style")
+                
+                # If main.py was updated, mention the backup
+                if (project_path / f"{config.app_path}.bak").exists():
+                    console.print(f"  • Your original {config.app_path} was backed up to {config.app_path}.bak")
+                    
+            console.print("\n[bold]Run [green]daisyft sync[/green] to ensure all files are up to date.[/bold]")
 
     except (OSError, PermissionError) as e:
         console.print(f"[red]Fatal error:[/red] {e}")
