@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List, Tuple, Protocol
 from .config import ProjectConfig
 from .console import console
+from .platform import get_bin_dir, get_tailwind_binary_name
 
 import typer
 
@@ -19,7 +20,9 @@ class CSSCommandBuilder(Protocol):
 
 def validate_binary(config: ProjectConfig) -> Path:
     """Validate Tailwind binary exists and return its path"""
-    binary_path = config.binary_path
+    # Use platform utilities to determine binary path
+    binary_path = get_bin_dir() / get_tailwind_binary_name()
+    
     if not binary_path.exists():
         console.print(f"[red]Error:[/red] Tailwind binary missing at {binary_path}")
         console.print("Please run [bold]daisyft init --force[/bold] to download it")

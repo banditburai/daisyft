@@ -2,7 +2,7 @@ import typer
 from pathlib import Path
 from typing import Optional
 from ..utils.config import ProjectConfig
-from ..utils.toml_config import load_config
+from ..utils.toml_config import load_config, save_config
 import logging
 from ..utils.console import console
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
         css_file.write_text("\n".join(css_content) + "\n")
     
     # Save any changes to the config
-    config.save()
+    save_config(config)
     
     logger.debug("Sync completed successfully")
     return True
