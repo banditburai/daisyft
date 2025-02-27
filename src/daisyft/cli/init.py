@@ -20,12 +20,12 @@ TEMPLATES = {
     "minimal": {
         "name": "Minimal",
         "description": "Basic setup with essential files only",
-        "files": ["input.css", "main.py", "tailwind.config.js"]
+        "files": ["input.css", "main.py"]
     },
     "standard": {
         "name": "Standard",
         "description": "Complete setup with example components",
-        "files": ["input.css", "main.py", "tailwind.config.js", "example.py"]
+        "files": ["input.css", "main.py", "example.py"]
     },
 }
 
@@ -334,14 +334,7 @@ def init(
                         "host": config.host
                     }
                 )
-                
-                # Tailwind config
-                render_template_safe(
-                    "tailwind.config.js.jinja2",
-                    project_path / "tailwind.config.js",
-                    {"style": config.style}
-                )
-                
+                                
                 # Add example component if using standard template
                 if config.template == "standard":
                     render_template_safe(
