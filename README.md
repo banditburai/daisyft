@@ -53,6 +53,7 @@ daisyft run
 
 - `daisyft init`: Create a new project with minimal setup
 - `daisyft init --advanced`: More configuration options
+- `daisyft init --binaries`: Download Tailwind binaries only without modifying project files
 - `daisyft dev`: Start the development server
 - `daisyft build`: Build CSS for production
 - `daisyft run`: Run the FastHTML application

@@ -30,6 +30,7 @@ def callback(ctx: typer.Context):
     [bold]Getting Started:[/bold]
     - Run [green]daisyft init[/green] to create a new project with minimal setup
     - Run [green]daisyft init --advanced[/green] for more configuration options
+    - Run [green]daisyft init --binaries[/green] to download Tailwind binaries only
     - Run [green]daisyft dev[/green] to start the development server    
     - Run [green]daisyft sync[/green] to check for Tailwind binary updates
     
@@ -40,14 +41,16 @@ def callback(ctx: typer.Context):
         return
 
     if not Path("daisyft.toml").exists():
+        console.print("[yellow]No daisyft configuration found.[/yellow]")
         if typer.confirm(
-            "[yellow]No daisyft configuration found.[/yellow] Would you like to initialize a new project?",
+            "Would you like to initialize a new project?",
             default=True
         ):
             ctx.invoke(init.init)
             raise typer.Exit()
         else:
             console.print("[red]Error:[/red] daisyft requires configuration to run. Use 'daisyft init' to set up a new project.")
+            console.print("Tip: Use [green]daisyft init --binaries[/green] to download only the Tailwind binaries without modifying existing files.")
             raise typer.Exit(1)
     
     try:

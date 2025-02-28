@@ -45,7 +45,6 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
             default_choice = i
             break
     
-    # Use dictionary-based choices instead of Choice objects
     selected = questionary.select(
         "Style framework:",
         choices=style_choices,
@@ -55,8 +54,7 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
     # Update the style
     answers["style"] = selected
     
-    if answers["style"] == "daisy":
-        # Define theme choices - simplified to just light and dark
+    if answers["style"] == "daisy":        
         theme_choices = [
             {"value": "dark", "name": "Dark mode (default)"},
             {"value": "light", "name": "Light mode"}
@@ -68,8 +66,7 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
             if choice["value"] == answers["theme"]:
                 default_choice = i
                 break
-        
-        # Use dictionary-based choices
+                
         selected_theme = questionary.select(
             "Theme:",
             choices=theme_choices,
@@ -252,7 +249,8 @@ def init(
     advanced: bool = typer.Option(False, "--advanced", "-a", help="Advanced setup with more configuration options"),
     template: Optional[str] = typer.Option(None, help="Project template to use"),
     force: bool = typer.Option(False, "--force", "-f", help="Force download new Tailwind binary"),
-    package_manager: Optional[str] = typer.Option(None, "--pm", help="Package manager to use")
+    package_manager: Optional[str] = typer.Option(None, "--pm", help="Package manager to use"),
+    binaries: bool = typer.Option(False, "--binaries", "-b", help="Download Tailwind binaries only without modifying project files")
 ) -> None:
     """Initialize a new DaisyFT project
     
@@ -265,6 +263,7 @@ def init(
         daisyft init --advanced     # Advanced setup with more configuration options
         daisyft init --defaults     # Use default settings without prompting
         daisyft init --template=minimal  # Use minimal template
+        daisyft init --binaries     # Download Tailwind binaries only without modifying project files
     """
     project_path = Path(path).absolute()
     config_path = project_path / "daisyft.toml"
@@ -277,7 +276,7 @@ def init(
         config = load_config(config_path)
         config_exists = config.is_initialized
 
-        if config_exists and not force:
+        if config_exists and not force and not binaries:
             console.print("[yellow]Project already initialized.[/yellow]")
             if not typer.confirm(
                 "Do you want to reinitialize?",
@@ -288,7 +287,7 @@ def init(
         
         # Get configuration options
         # Always get user options when reinitializing with advanced flag
-        if not config_exists or (config_exists and advanced):
+        if not config_exists or (config_exists and advanced and not binaries):
             # Store the previous style before updating
             previous_style = config.style if config_exists else None
             
@@ -311,7 +310,32 @@ def init(
             TextColumn("[progress.description]{task.description}"),
             console=console
         ) as progress:
-            # Download Tailwind binary first
+            # If binaries-only flag is set, just download the binaries and create/update config
+            if binaries:
+                task = progress.add_task("Setting up Tailwind binaries...", total=100)
+                
+                # If config doesn't exist, create a minimal config
+                if not config_exists:
+                    options = InitOptions()
+                    config.update_from_options(options)
+                
+                binary_type = "DaisyUI-enhanced Tailwind CSS" if config.style == "daisy" else "Vanilla Tailwind CSS"
+                console.print(f"[green]Downloading {binary_type} binaries only - your project files won't be modified[/green]")
+                progress.update(task, description=f"Downloading {binary_type} binary...", advance=10)
+                
+                download_tailwind_binary(config, force=force, existing_progress=progress)
+                
+                # Save config with valid binary path
+                save_config(config, config_path)
+                
+                progress.update(task, description="Finalizing setup...", advance=90)
+                
+                # Show success message for binaries-only mode
+                console.print("\n[green bold]✓ Tailwind binaries installed successfully![/green bold]")
+                console.print("\n[bold]The binaries are now available for use with your existing project.[/bold]")
+                return
+            
+            # Regular initialization flow when not using binaries-only flag
             task = progress.add_task("Setting up project...", total=100)
             
             # Clearer messaging about what's being downloaded
