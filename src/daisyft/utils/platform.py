@@ -34,5 +34,13 @@ def get_tailwind_binary_name() -> str:
     
     return f"tailwindcss-{platform_name}-{architecture}{ext}"
 
+def get_tailwind_remote_asset_name(style: str) -> str:
+    platform_name, architecture = detect_platform()
+    ext = ".exe" if platform_name == "windows" else ""
+    
+    prefix = "tailwindcss-extra-" if style == "daisy" else "tailwindcss-"
+        
+    return f"{prefix}{platform_name}-{architecture}{ext}"
+
 def get_bin_dir() -> Path:
     return Path(".daisyft") / "bin" 

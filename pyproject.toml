@@ -1,7 +1,7 @@
 [project]
 name = "daisyft"
 version = "0.1.7"
-description = "DaisyUI/Tailwind/Motion components for FastHTML projects"
+description = "DaisyUI/Tailwind cli for FastHTML projects"
 readme = "README.md"
 authors = [
     { name = "firefly", email = "promptsiren@gmail.com" }

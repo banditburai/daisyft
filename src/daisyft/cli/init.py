@@ -9,7 +9,7 @@ from ..utils.toml_config import load_config, save_config
 from ..utils.console import console
 from ..utils.downloader import download_tailwind_binary
 from ..utils.template import render_template, TemplateContext
-from ..utils.platform import get_tailwind_binary_name
+from ..utils.platform import get_tailwind_binary_name, get_bin_dir
 
 # Simplified question handlers with progressive disclosure
 def handle_basic_options(answers: Dict[str, Any]) -> None:
@@ -168,8 +168,8 @@ def init(
                 
         binary_type = "DaisyUI-enhanced Tailwind CSS" if config.style == "daisy" else "Vanilla Tailwind CSS"
         
-        # Determine if download is needed *before* the progress bar for the download itself
-        needs_download = force or not (config.binary_metadata and (daisyft_dir / get_tailwind_binary_name()).exists())
+        local_binary_path = get_bin_dir() / get_tailwind_binary_name()
+        needs_download = force or not (config.binary_metadata and local_binary_path.exists())
         if not needs_download and hasattr(config, 'previous_style') and config.previous_style != config.style:
              needs_download = True # Force download if style changed
         

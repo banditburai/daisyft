@@ -4,12 +4,12 @@ Utilities for downloading Tailwind binaries.
 import platform
 import requests
 from pathlib import Path
-from typing import Literal, Optional, Callable
+from typing import Optional, Callable
 from rich.progress import Progress, BarColumn, DownloadColumn, TimeRemainingColumn, TextColumn
 import typer
 
 from .config import ProjectConfig
-from .platform import get_bin_dir, get_tailwind_binary_name
+from .platform import get_bin_dir, get_tailwind_binary_name, get_tailwind_remote_asset_name
 from .release_info import TailwindReleaseInfo
 from .console import console
 from .toml_config import save_config
@@ -71,7 +71,8 @@ def download_tailwind_binary(
             if not force and not typer.confirm(f"Update from {current} to {latest}?"):
                 return dest
 
-        url = f"{TailwindReleaseInfo.get_download_url(config.style)}{dest.name}"
+        remote_asset_name = get_tailwind_remote_asset_name(config.style)
+        url = f"{TailwindReleaseInfo.get_download_url(config.style)}{remote_asset_name}"
         
         if not show_progress:
             console.print(f"Downloading from: {url}")
