@@ -11,15 +11,6 @@ from .config import ProjectConfig, BinaryMetadata
 from .console import console
 
 def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
-    """
-    Load configuration from a TOML file.
-    
-    Args:
-        config_path: Path to the configuration file (defaults to .daisyft/daisyft.toml in current directory)
-        
-    Returns:
-        ProjectConfig object with loaded configuration
-    """
     if config_path is None:
         config_path = Path(".daisyft") / "daisyft.toml"
         
@@ -30,27 +21,22 @@ def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
         with open(config_path, "rb") as f:
             data = tomli.load(f)
         
-        # Extract nested sections
         project_data = data.get('project', {})
         server_data = data.get('server', {})
         paths_data = data.get('paths', {})
         binary_data = data.get('binary')
         
-        # Convert paths to Path objects
         paths = {}
         for key, value in paths_data.items():
             paths[key] = Path(value)
             
-        # Convert app_path to Path
         if 'app_path' in project_data and isinstance(project_data['app_path'], str):
             project_data['app_path'] = Path(project_data['app_path'])
         
-        # Process binary metadata
         binary_metadata = None
         if binary_data:
             binary_metadata = BinaryMetadata.from_dict(binary_data)
         
-        # Create config object
         config = ProjectConfig(
             style=project_data.get('style', ProjectConfig.style),
             theme=project_data.get('theme', ProjectConfig.theme),
@@ -73,21 +59,12 @@ def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
         return ProjectConfig()  # Return default config on error
 
 def save_config(config: ProjectConfig, config_path: Optional[Path] = None) -> None:
-    """
-    Save configuration to a TOML file.
-    
-    Args:
-        config: ProjectConfig object to save
-        config_path: Path to save the configuration file (defaults to .daisyft/daisyft.toml in current directory)
-    """
     if config_path is None:
         config_path = Path(".daisyft") / "daisyft.toml"
         
     try:
-        # Ensure the target directory exists before saving
         config_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Convert to nested dictionary structure
         data = {
             'project': {
                 'style': config.style,
@@ -104,15 +81,12 @@ def save_config(config: ProjectConfig, config_path: Optional[Path] = None) -> No
             },
         }
         
-        # Add previous_style if it exists
         if hasattr(config, 'previous_style') and config.previous_style is not None:
             data['project']['previous_style'] = config.previous_style
-        
-        # Add binary metadata if available
+                
         if config.binary_metadata:
             data['binary'] = config.binary_metadata.to_dict()
-        
-        # Write to file
+                
         with open(config_path, "wb") as f:
             tomli_w.dump(data, f)
             

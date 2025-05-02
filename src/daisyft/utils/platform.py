@@ -3,22 +3,12 @@ Platform detection and binary naming utilities.
 """
 from pathlib import Path
 import platform
-import sys
-import sysconfig
 from typing import Literal, Tuple
 
-# Type definitions
 PlatformName = Literal["macos", "linux", "windows"]
 Architecture = Literal["x64", "arm64"]
 
 def detect_platform() -> Tuple[PlatformName, Architecture]:
-    """
-    Detect current platform and architecture in a normalized way.
-    
-    Returns:
-        Tuple containing (platform_name, architecture)
-    """
-    # Platform detection
     system = platform.system().lower()
     if system == "darwin":
         platform_name: PlatformName = "macos"
@@ -27,7 +17,6 @@ def detect_platform() -> Tuple[PlatformName, Architecture]:
     else:
         platform_name = "windows"
 
-    # Architecture detection
     arch = platform.machine().lower()
     if arch in ("arm64", "aarch64"):
         architecture: Architecture = "arm64"
@@ -39,25 +28,11 @@ def detect_platform() -> Tuple[PlatformName, Architecture]:
     return platform_name, architecture
 
 def get_tailwind_binary_name() -> str:
-    """
-    Get the platform-specific Tailwind binary name.
-    
-    Returns:
-        String with the appropriate binary name for the current platform
-    """
     platform_name, architecture = detect_platform()
     
-    # Determine file extension
     ext = ".exe" if platform_name == "windows" else ""
     
     return f"tailwindcss-{platform_name}-{architecture}{ext}"
 
 def get_bin_dir() -> Path:
-    """
-    Get the project-specific binary directory.
-    
-    Returns:
-        Path to the .daisyft/bin directory relative to the current working directory.
-    """
-    # Return the fixed relative path
     return Path(".daisyft") / "bin" 

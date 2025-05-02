@@ -47,17 +47,6 @@ def download_tailwind_binary(
     force: bool = False,
     show_progress: bool = True
 ) -> Path:
-    """
-    Unified download handler with version checks and progress control.
-    
-    Args:
-        config: ProjectConfig object with configuration settings
-        force: Whether to force download even if already up to date
-        show_progress: Whether to show download progress
-        
-    Returns:
-        Path to the downloaded binary
-    """
     try:            
         release_info = get_release_info(config.style)
         dest = get_bin_dir() / get_tailwind_binary_name()
@@ -111,14 +100,6 @@ def download_tailwind_binary(
         raise typer.Exit(1) from e
 
 def _core_download(url: str, dest: Path, show_progress: bool) -> None:
-    """
-    Base download implementation with progress optional.
-    
-    Args:
-        url: URL to download from
-        dest: Destination path to save the file
-        show_progress: Whether to show download progress
-    """
     response = requests.get(url, stream=True, timeout=(3.05, 30))
     response.raise_for_status()
 
@@ -138,14 +119,6 @@ def _core_download(url: str, dest: Path, show_progress: bool) -> None:
         _write_content(response, dest)
 
 def _write_content(response: requests.Response, dest: Path, callback: Optional[Callable[[int], None]] = None) -> None:
-    """
-    Stream response to a temporary file, then atomically rename.
-    
-    Args:
-        response: HTTP response object
-        dest: FINAL destination path for the file
-        callback: Optional callback function to report progress
-    """
     temp_dest = dest.with_suffix(dest.suffix + ".tmp")
     
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -180,15 +153,6 @@ def _write_content(response: requests.Response, dest: Path, callback: Optional[C
             temp_dest.unlink(missing_ok=True)
 
 def get_release_info(style: str = "daisy") -> dict:
-    """
-    Fetch GitHub release info with timeout.
-    
-    Args:
-        style: Either "daisy" or "vanilla" to determine which repository to use
-        
-    Returns:
-        Dictionary with release information
-    """
     url = TailwindReleaseInfo.get_api_url(style)
     
     try:

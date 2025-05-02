@@ -1,6 +1,6 @@
 [project]
 name = "daisyft"
-version = "0.1.6"
+version = "0.1.7"
 description = "DaisyUI/Tailwind/Motion components for FastHTML projects"
 readme = "README.md"
 authors = [
@@ -39,6 +39,9 @@ dev-dependencies = [
     "pytest>=8.3.4",
     "responses>=0.25.6",
     ]
+
+[tool.uv.workspace]
+members = ["daisyft-test"]
 
 [build-system]
 requires = ["hatchling"]

@@ -9,10 +9,6 @@ from ..utils.console import console
 logger = logging.getLogger(__name__)
 
 def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
-    """Internal sync function that works with ProjectConfig object
-    
-    Checks for updates to the Tailwind binary and downloads if available.
-    """
     logger.debug("Starting sync...")        
     console.print("[bold]Checking for Tailwind binary updates...[/bold]")
     
@@ -34,11 +30,6 @@ def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
 def sync(
     force: bool = typer.Option(False, "--force", "-f", help="Force download even if no update is available"),
 ) -> None:
-    """Sync Tailwind binary with the latest version
-    
-    This command checks for updates to the Tailwind binary and downloads
-    the latest version if available.
-    """
         
     config_path = Path(".daisyft") / "daisyft.toml"
     if not config_path.exists():
