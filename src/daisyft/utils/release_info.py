@@ -9,7 +9,7 @@ class TailwindReleaseInfo:
     """Information about Tailwind releases and repositories."""
     
     # Repository information
-    DAISY_REPO = "banditburai/fastwindcss"
+    DAISY_REPO = "dobicinaitis/tailwind-cli-extra"
     VANILLA_REPO = "tailwindlabs/tailwindcss"
     
     

@@ -54,15 +54,10 @@ def get_tailwind_binary_name() -> str:
 
 def get_bin_dir() -> Path:
     """
-    Get platform-appropriate binary directory with venv awareness.
+    Get the project-specific binary directory.
     
     Returns:
-        Path to the appropriate binary directory
+        Path to the .daisyft/bin directory relative to the current working directory.
     """
-    # Try to use sysconfig first (respects virtual environments)
-    if scripts_path := sysconfig.get_path("scripts"):
-        return Path(scripts_path)
-    
-    # Fallback for non-standard environments
-    system = platform.system().lower()
-    return Path(sys.prefix) / ("Scripts" if system == "windows" else "bin") 
+    # Return the fixed relative path
+    return Path(".daisyft") / "bin" 

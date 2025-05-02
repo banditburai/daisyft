@@ -21,7 +21,7 @@ def run(
     output_css: str = typer.Option(None, "--output", "-o", help="Output CSS file path"),
 ) -> None:
     """Build CSS and run the FastHTML application"""
-    config = load_config(Path("daisyft.toml"))
+    config = load_config()
     
     # Use config values unless overridden
     host = host or config.host

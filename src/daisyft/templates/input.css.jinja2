@@ -3,9 +3,3 @@
 {% if style == "daisy" %}
 @plugin "daisyui";
 {% endif %}
-
-@layer components {
-{% for component, config in components.items() %}
-  {% include "components/" + component + ".css.jinja2" ignore missing %}
-{% endfor %}
-}

@@ -13,21 +13,15 @@ def sync_with_config(config: ProjectConfig, force: bool = False) -> None:
     
     Checks for updates to the Tailwind binary and downloads if available.
     """
-    logger.debug("Starting sync...")
-    
-    # Check for binary updates
+    logger.debug("Starting sync...")        
     console.print("[bold]Checking for Tailwind binary updates...[/bold]")
     
     update_available = check_for_binary_update(config)
     
     if update_available or force:
         console.print(f"[yellow]Update available for Tailwind binary.[/yellow]")
-        console.print(f"Downloading latest {config.style} binary...")
-        
-        # Download the latest binary
-        download_tailwind_binary(config, force=True)
-        
-        # Save config with updated binary metadata
+        console.print(f"Downloading latest {config.style} binary...")        
+        download_tailwind_binary(config, force=True)                
         save_config(config)
         
         console.print("[green]✓[/green] Tailwind binary updated successfully!")
@@ -45,13 +39,12 @@ def sync(
     This command checks for updates to the Tailwind binary and downloads
     the latest version if available.
     """
-    
-    if not Path("daisyft.toml").exists():
-        console.print("[red]Error:[/red] Not in a daisyft project.")
-        console.print("\nTo create a new project, run:")
-        console.print("  [bold]daisyft init[/bold]")
-        console.print("\nOr cd into an existing daisyft project directory.")
+        
+    config_path = Path(".daisyft") / "daisyft.toml"
+    if not config_path.exists():
+        console.print("[red]Error:[/red] daisyft.toml not found. Please run [bold]daisyft init[/bold].")
         raise typer.Exit(1)
     
-    config = load_config(Path("daisyft.toml"))
+    config = load_config() # Use default path
+    
     sync_with_config(config, force) 

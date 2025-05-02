@@ -7,8 +7,6 @@ style = "{{ style }}"
 {% if previous_style %}previous_style = "{{ previous_style }}"{% endif %}
 theme = "{{ theme }}"
 app_path = "{{ app_path }}"
-include_icons = {{ include_icons }}
-include_datastar = {{ include_datastar }}
 verbose = {{ verbose }}
 
 [server]
@@ -17,25 +15,17 @@ port = {{ port }}
 live = {{ live }}
 
 [paths]
-components = "{{ paths.components }}"
-ui = "{{ paths.ui }}"
 static = "{{ paths.static }}"
 css = "{{ paths.css }}"
 js = "{{ paths.js }}"
-icons = "{{ paths.icons }}"
+
 
 {% if binary_metadata %}
 [binary]
 version = "{{ binary_metadata.version }}"
-downloaded_at = "{{ binary_metadata.downloaded_at.isoformat() }}"
+style = "{{ binary_metadata.style }}"
+timestamp = "{{ binary_metadata.timestamp }}"
+url = "{{ binary_metadata.url }}"
+release_id = {{ binary_metadata.release_id }}
+sha = "{{ binary_metadata.sha }}"
 {% endif %}
-
-{% if components %}
-[components]
-{% for name, comp in components.items() %}
-[components.{{ name }}]
-name = "{{ comp.name }}"
-type = "{{ comp.type }}"
-path = "{{ comp.path }}"
-{% endfor %}
-{% endif %} 

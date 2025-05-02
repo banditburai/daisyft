@@ -8,22 +8,18 @@ from typing import Dict, Literal, Optional, Union, Any
 
 @dataclass
 class InitOptions:
-    """Initialization options for project setup."""
-    style: str = "daisy"
-    theme: str = "dark"
+    """Options captured during the init process."""
+    style: Literal["daisy", "vanilla"] = "daisy"
+    theme: Literal["dark", "light", "default"] = "dark"
     app_path: Path = Path("main.py")
-    include_icons: bool = False
-    include_datastar: bool = False
-    components_dir: Path = Path("components")
     static_dir: Path = Path("static")
-    verbose: bool = True
-    template: str = "standard"
 
 @dataclass
 class BinaryMetadata:
     """Metadata about the Tailwind binary."""
     version: str
     downloaded_at: datetime
+    app_path: Union[str, Path] = "main.py"
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a dictionary for serialization."""
@@ -51,60 +47,30 @@ class BinaryMetadata:
         return cls(**filtered_data)
 
 @dataclass
-class ComponentMetadata:
-    """Metadata about an installed component."""
-    name: str
-    type: str
-    path: Union[str, Path]
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to a dictionary for serialization."""
-        return {
-            "name": self.name,
-            "type": self.type,
-            "path": str(self.path) if isinstance(self.path, Path) else self.path
-        }
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ComponentMetadata':
-        """Create a ComponentMetadata instance from a dictionary."""
-        if isinstance(data.get('path'), str):
-            data['path'] = Path(data['path'])
-        return cls(**data)
-
-@dataclass
 class ProjectConfig:
     """Main configuration for a DaisyFT project."""
     # Project settings
     style: str = "daisy"
     theme: str = "dark"
     app_path: Union[str, Path] = "main.py"
-    include_icons: bool = False
-    include_datastar: bool = False
-    verbose: bool = True
     
     # For tracking style changes during reinitialization
     previous_style: Optional[str] = None
     
     # Server settings
-    host: str = "127.0.0.1"
-    port: int = 8000
+    host: str = "localhost"
+    port: int = 5000
     live: bool = True
-    template: str = "standard"
     
     # Paths
-    paths: Dict[str, Union[str, Path]] = field(default_factory=lambda: {
-        "components": "components",
-        "ui": "components/ui",
-        "static": "static",
-        "css": "static/css",
-        "js": "static/js",
-        "icons": "static/icons",
+    paths: Dict[str, Path] = field(default_factory=lambda: {
+        "static": Path("static"),
+        "css": Path("static/css"),
+        "js": Path("static/js"),
     })
     
     # Metadata
     binary_metadata: Optional[BinaryMetadata] = None
-    components: Dict[str, ComponentMetadata] = field(default_factory=dict)
     
     @property
     def is_initialized(self) -> bool:
@@ -116,39 +82,13 @@ class ProjectConfig:
         self.style = options.style
         self.theme = options.theme
         self.app_path = options.app_path
-        self.include_icons = options.include_icons
-        self.include_datastar = options.include_datastar
-        self.verbose = options.verbose
-        self.template = options.template
         
         # Update paths
-        self.paths["components"] = options.components_dir
-        self.paths["ui"] = options.components_dir / "ui"
         self.paths["static"] = options.static_dir
         self.paths["css"] = options.static_dir / "css"
         self.paths["js"] = options.static_dir / "js"
-        self.paths["icons"] = options.static_dir / "icons"
     
-    def has_component(self, name: str) -> bool:
-        """Check if a component is installed."""
-        return name in self.components
-    
-    def add_component(self, name: str, type_: str, path: Path) -> None:
-        """Add a component to the configuration."""
-        self.components[name] = ComponentMetadata(
-            name=name,
-            type=type_,
-            path=path
-        )
-    
-    def remove_component(self, name: str) -> bool:
-        """Remove a component from the configuration."""
-        if name in self.components:
-            del self.components[name]
-            return True
-        return False
-    
-    def update_binary_metadata(self, release_info: dict) -> None:
+    def update_binary_metadata(self, release_info: Dict[str, Any]) -> None:
         """Update binary metadata from release info."""
         self.binary_metadata = BinaryMetadata(
             version=release_info.get("tag_name", "unknown"),

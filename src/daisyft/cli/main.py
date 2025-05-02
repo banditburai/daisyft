@@ -1,7 +1,7 @@
 import typer
 from pathlib import Path
-from typing import Optional, List
-from daisyft.cli import init, config, build, dev, run, sync
+from typing import List
+from daisyft.cli import init, build, dev, run, sync
 
 from ..utils.console import console
 from ..utils.toml_config import load_config
@@ -29,7 +29,7 @@ def callback(ctx: typer.Context):
     
     [bold]Getting Started:[/bold]
     - Run [green]daisyft init[/green] to create a new project with minimal setup
-    - Run [green]daisyft init --advanced[/green] for more configuration options
+    - Run [green]daisyft init --defaults[/green] for default settings
     - Run [green]daisyft init --binaries[/green] to download Tailwind binaries only
     - Run [green]daisyft dev[/green] to start the development server    
     - Run [green]daisyft sync[/green] to check for Tailwind binary updates
@@ -40,22 +40,17 @@ def callback(ctx: typer.Context):
     if ctx.invoked_subcommand == "init":
         return
 
-    if not Path("daisyft.toml").exists():
-        console.print("[yellow]No daisyft configuration found.[/yellow]")
-        if typer.confirm(
-            "Would you like to initialize a new project?",
-            default=True
-        ):
-            ctx.invoke(init.init)
-            raise typer.Exit()
-        else:
-            console.print("[red]Error:[/red] daisyft requires configuration to run. Use 'daisyft init' to set up a new project.")
-            console.print("Tip: Use [green]daisyft init --binaries[/green] to download only the Tailwind binaries without modifying existing files.")
-            raise typer.Exit(1)
+    # Check if daisyft.toml exists before running most commands
+    # (init should be allowed to run without it)
+    command_name = ctx.invoked_subcommand
     
+    config_path = Path(".daisyft") / "daisyft.toml"
+    if command_name != "init" and not config_path.exists():
+        console.print("[red]Error:[/red] Project not initialized. Please run [bold]daisyft init[/bold].")
+        raise typer.Exit(1)
+
     try:
-        # Try to load config to validate it
-        config = load_config(Path("daisyft.toml"))
+        config = load_config()
     except Exception as e:
         console.print(f"[red]Error:[/red] Invalid daisyft.toml configuration: {e}")
         if typer.confirm("Would you like to reinitialize the project?", default=False):

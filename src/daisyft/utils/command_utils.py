@@ -19,8 +19,7 @@ class CSSCommandBuilder(Protocol):
     ) -> List[str]: ...
 
 def validate_binary(config: ProjectConfig) -> Path:
-    """Validate Tailwind binary exists and return its path"""
-    # Use platform utilities to determine binary path
+    """Validate Tailwind binary exists and return its path"""    
     binary_path = get_bin_dir() / get_tailwind_binary_name()
     
     if not binary_path.exists():

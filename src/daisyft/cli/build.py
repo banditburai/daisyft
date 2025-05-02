@@ -11,7 +11,7 @@ def build(
     minify: bool = typer.Option(False, "--minify", "-m", help="Minify output CSS")
 ) -> None:
     """Build Tailwind CSS"""
-    config = load_config(Path("daisyft.toml"))
+    config = load_config()
     input_path, output_path = resolve_css_paths(config, input_path, output_path)
     binary_path = validate_binary(config)
     

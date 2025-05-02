@@ -3,7 +3,9 @@ from pathlib import Path
 from typer.testing import CliRunner
 from daisyft.cli.main import app
 from daisyft.utils.config import ProjectConfig
-from daisyft.registry.decorators import Registry, RegistryType
+from daisyft.utils.toml_config import load_config, save_config
+import datetime
+from unittest.mock import patch
 
 @pytest.fixture
 def runner():
@@ -22,16 +24,11 @@ def mock_config(temp_project):
         style="daisy",
         app_path=temp_project / "main.py",
         paths={
-            "components": temp_project / "components",
-            "ui": temp_project / "components/ui",
             "static": temp_project / "static",
             "css": temp_project / "static/css",
             "js": temp_project / "static/js",
-            "icons": temp_project / "icons"
         }
     )
-    config_path = temp_project / "daisyft.conf.py"
-    config.save(config_path)
     return config
 
 # CLI Tests
@@ -44,76 +41,18 @@ def test_cli_help(runner):
 def test_cli_no_config(runner, temp_project):
     """Test CLI behavior without config file"""
     with runner.isolated_filesystem(temp_dir=temp_project):
-        result = runner.invoke(app, ["add"], input="n\n")  # Answer no to init prompt
-        assert result.exit_code == 1
-        assert "No daisyft configuration found" in result.output
+        # Use 'build' command as an example that requires config
+        result = runner.invoke(app, ["build"])
+        # Expect exit code 1 due to missing config check in main callback
+        assert result.exit_code == 1 
+        assert "Project not initialized" in result.output
 
-def test_cli_invalid_command(runner, mock_config, temp_project):
+def test_cli_invalid_command(runner):
     """Test CLI behavior with invalid command"""
-    with runner.isolated_filesystem(temp_dir=temp_project):
-        result = runner.invoke(app, ["invalid-command"])
-        assert result.exit_code == 2
-        assert "No such command" in result.output
-
-# Registry Tests
-def test_registry_component_decorator():
-    """Test Registry.component decorator"""
-    # Test with explicit description
-    @Registry.component(
-        name="test-button",
-        description="Test button component",
-        categories=["ui"],
-        author="test"
-    )
-    class TestButton:
-        pass
-
-    assert "test-button" in Registry._components
-    meta = TestButton._registry_meta
-    assert meta.name == "test-button"
-    assert meta.type == RegistryType.COMPONENT
-    assert meta.description == "Test button component"
-    assert "ui" in meta.categories
-    assert meta.author == "test"
-
-    # Test with docstring description
-    @Registry.component(
-        name="test-button-2",
-        categories=["ui"],
-        author="test"
-    )
-    class TestButton2:
-        """Docstring description"""
-        pass
-
-    meta2 = TestButton2._registry_meta
-    assert meta2.description == "Docstring description"
-
-def test_registry_block_decorator():
-    """Test Registry.block decorator"""
-    @Registry.block(
-        name="test-block",
-        description="Test block component",
-        dependencies=["test-button"]
-    )
-    class TestBlock:
-        pass
-
-    assert "test-block" in Registry._blocks
-    meta = TestBlock._registry_meta
-    assert meta.name == "test-block"
-    assert meta.type == RegistryType.BLOCK
-    assert "test-button" in meta.dependencies
-
-def test_registry_component_lookup():
-    """Test Registry component lookup methods"""
-    @Registry.component(name="lookup-test")
-    class LookupTest:
-        pass
-
-    assert Registry.get_component("lookup-test") == LookupTest
-    assert Registry.get_any("lookup-test") == LookupTest
-    assert "lookup-test" in [c.split(":")[0].strip() for c in Registry.get_available_components()]
+    # No config needed to check for invalid command
+    result = runner.invoke(app, ["invalid-command"])
+    assert result.exit_code == 2
+    assert "No such command 'invalid-command'" in result.output
 
 # Config Tests
 def test_config_initialization(temp_project):
@@ -124,43 +63,117 @@ def test_config_initialization(temp_project):
     )
     assert config.style == "daisy"
     assert config.app_path == temp_project / "main.py"
-    assert isinstance(config.paths["components"], Path)
+    assert isinstance(config.paths["static"], Path)
 
 def test_config_save_load(temp_project):
-    """Test ProjectConfig save and load"""
+    """Test ProjectConfig save and load using utility functions"""
     config = ProjectConfig(style="daisy")
-    config_path = temp_project / "daisyft.conf.py"
-    config.save(config_path)
+    config_path = temp_project / ".daisyft" / "daisyft.toml"
     
-    loaded_config = ProjectConfig.load(config_path)
+    # Ensure .daisyft dir exists
+    config_path.parent.mkdir(exist_ok=True)
+    
+    save_config(config, config_path)
+    assert config_path.exists()
+    
+    # Pass path explicitly to load_config for test isolation
+    loaded_config = load_config(config_path)
+    assert loaded_config is not None
     assert loaded_config.style == config.style
-    assert loaded_config.paths == config.paths
+    # Convert loaded paths back to relative strings for comparison if necessary,
+    # or compare Path objects directly if default factory guarantees consistency.
+    # Comparing the objects directly is usually fine.
+    assert loaded_config.paths == config.paths 
 
-def test_config_component_tracking(temp_project):
-    """Test ProjectConfig component tracking"""
-    config = ProjectConfig()
-    config.add_component(
-        name="test-component",
-        type="component",
-        path=temp_project / "components/ui/test.py"
-    )
-    
-    assert config.has_component("test-component")
-    assert config.get_component_path("test-component") == temp_project / "components/ui/test.py"
-    
-    config.remove_component("test-component")
-    assert not config.has_component("test-component")
-
-def test_config_binary_metadata():
+def test_config_binary_metadata(mocker):
     """Test ProjectConfig binary metadata handling"""
     config = ProjectConfig()
+    # Mock datetime.now() specifically in the config module
+    mock_dt = mocker.patch('daisyft.utils.config.datetime')
+    mock_dt.now.return_value = datetime.datetime(2023, 1, 1, 12, 0, 0)
+    
     release_info = {
         "tag_name": "v1.0.0",
-        "sha": "test-sha",
-        "id": 123
+        # Removed fields no longer used by update_binary_metadata
+        # "sha": "test-sha", 
+        # "id": 123 
     }
     
     config.update_binary_metadata(release_info)
+    assert config.binary_metadata is not None
     assert config.binary_metadata.version == "v1.0.0"
-    assert config.binary_metadata.sha == "test-sha"
-    assert config.binary_metadata.release_id == 123
+    assert config.binary_metadata.downloaded_at == mock_dt.now.return_value
+    # Removed assertions for sha/release_id
+    # assert config.binary_metadata.sha == "test-sha" 
+    # assert config.binary_metadata.release_id == 123 
+
+# --- Sync Command Tests --- 
+
+def test_sync_config_missing(runner, temp_project):
+    """Test sync command when config file is missing."""
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        result = runner.invoke(app, ["sync"])
+        assert result.exit_code == 1
+        # Check for the error message from the main callback, not the sync command
+        assert "Project not initialized" in result.output
+        assert "Please run daisyft init." in result.output # Check plain text
+
+@pytest.mark.parametrize("force_flag, check_update_return, expect_download, expect_output", [
+    ([], False, False, "binary is up to date"),  # No force, up to date
+    ([], True, True, "updated successfully"),     # No force, update available
+    (["--force"], False, True, "updated successfully"), # Force, up to date
+    (["--force"], True, True, "updated successfully"),  # Force, update available
+])
+@patch('daisyft.cli.sync.load_config')
+@patch('daisyft.cli.sync.save_config')
+@patch('daisyft.cli.sync.check_for_binary_update')
+@patch('daisyft.cli.sync.download_tailwind_binary')
+@patch('pathlib.Path.exists') # Mock Path.exists globally for this test
+def test_sync_command_scenarios(
+    mock_exists, 
+    mock_download, 
+    mock_check_update, 
+    mock_save, 
+    mock_load, 
+    runner, 
+    temp_project, 
+    force_flag, 
+    check_update_return, 
+    expect_download, 
+    expect_output
+):
+    """Test sync command under various conditions (up-to-date, update, force)."""
+    # Mock config file existence
+    mock_exists.return_value = True 
+    
+    # Mock load_config to return a valid config object
+    mock_config = ProjectConfig(style="daisy") # Create a dummy config
+    mock_load.return_value = mock_config
+    
+    # Mock check_for_binary_update based on scenario
+    mock_check_update.return_value = check_update_return
+
+    # Ensure the .daisyft directory exists for isolated filesystem
+    config_dir = temp_project / ".daisyft"
+    config_dir.mkdir(exist_ok=True)
+    (config_dir / "daisyft.toml").touch() # Create dummy file
+
+    with runner.isolated_filesystem(temp_dir=temp_project):
+        cmd = ["sync"] + force_flag
+        result = runner.invoke(app, cmd)
+        
+        print(f"Sync command output ({cmd}): {result.output}") # Debug output
+        
+        assert result.exit_code == 0
+        assert expect_output in result.output
+        
+        mock_load.assert_called_once()
+        mock_check_update.assert_called_once_with(mock_config)
+        
+        if expect_download:
+            # Check if download was called (with force=True regardless of flag due to sync logic)
+            mock_download.assert_called_once_with(mock_config, force=True)
+            mock_save.assert_called_once_with(mock_config)
+        else:
+            mock_download.assert_not_called()
+            mock_save.assert_not_called()

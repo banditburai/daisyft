@@ -7,7 +7,7 @@ import tomli_w
 import typer
 from typing import Dict, Any, Optional
 
-from .config import ProjectConfig, BinaryMetadata, ComponentMetadata
+from .config import ProjectConfig, BinaryMetadata
 from .console import console
 
 def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
@@ -15,13 +15,13 @@ def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
     Load configuration from a TOML file.
     
     Args:
-        config_path: Path to the configuration file (defaults to daisyft.toml in current directory)
+        config_path: Path to the configuration file (defaults to .daisyft/daisyft.toml in current directory)
         
     Returns:
         ProjectConfig object with loaded configuration
     """
     if config_path is None:
-        config_path = Path("daisyft.toml")
+        config_path = Path(".daisyft") / "daisyft.toml"
         
     if not config_path.exists():
         return ProjectConfig()  # Return default config if file doesn't exist
@@ -35,7 +35,6 @@ def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
         server_data = data.get('server', {})
         paths_data = data.get('paths', {})
         binary_data = data.get('binary')
-        components_data = data.get('components', {})
         
         # Convert paths to Path objects
         paths = {}
@@ -51,27 +50,16 @@ def load_config(config_path: Optional[Path] = None) -> ProjectConfig:
         if binary_data:
             binary_metadata = BinaryMetadata.from_dict(binary_data)
         
-        # Process components
-        components = {}
-        for name, comp_data in components_data.items():
-            if isinstance(comp_data, dict):  # Skip the empty table marker
-                components[name] = ComponentMetadata.from_dict(comp_data)
-        
         # Create config object
         config = ProjectConfig(
             style=project_data.get('style', ProjectConfig.style),
             theme=project_data.get('theme', ProjectConfig.theme),
             app_path=project_data.get('app_path', ProjectConfig.app_path),
-            include_icons=project_data.get('include_icons', ProjectConfig.include_icons),
-            include_datastar=project_data.get('include_datastar', ProjectConfig.include_datastar),
-            verbose=project_data.get('verbose', ProjectConfig.verbose),
             host=server_data.get('host', ProjectConfig.host),
             port=server_data.get('port', ProjectConfig.port),
             live=server_data.get('live', ProjectConfig.live),
-            template=project_data.get('template', ProjectConfig.template),
             paths=paths or ProjectConfig.paths,
             binary_metadata=binary_metadata,
-            components=components
         )
         
         # Set previous_style if it exists in the data
@@ -90,22 +78,21 @@ def save_config(config: ProjectConfig, config_path: Optional[Path] = None) -> No
     
     Args:
         config: ProjectConfig object to save
-        config_path: Path to save the configuration file (defaults to daisyft.toml in current directory)
+        config_path: Path to save the configuration file (defaults to .daisyft/daisyft.toml in current directory)
     """
     if config_path is None:
-        config_path = Path("daisyft.toml")
+        config_path = Path(".daisyft") / "daisyft.toml"
         
     try:
+        # Ensure the target directory exists before saving
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        
         # Convert to nested dictionary structure
         data = {
             'project': {
                 'style': config.style,
                 'theme': config.theme,
                 'app_path': str(config.app_path),
-                'include_icons': config.include_icons,
-                'include_datastar': config.include_datastar,
-                'verbose': config.verbose,
-                'template': config.template,
             },
             'server': {
                 'host': config.host,
@@ -124,12 +111,6 @@ def save_config(config: ProjectConfig, config_path: Optional[Path] = None) -> No
         # Add binary metadata if available
         if config.binary_metadata:
             data['binary'] = config.binary_metadata.to_dict()
-        
-        # Add components if available
-        if config.components:
-            data['components'] = {}
-            for name, component in config.components.items():
-                data['components'][name] = component.to_dict()
         
         # Write to file
         with open(config_path, "wb") as f:

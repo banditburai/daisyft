@@ -19,8 +19,8 @@ def dev(
     input_css: str = typer.Option(None, "--input", "-i", help="Input CSS file path"),
     output_css: str = typer.Option(None, "--output", "-o", help="Output CSS file path"),
 ) -> None:
-    """Start development server with CSS watching"""
-    config = load_config(Path("daisyft.toml"))
+    """Run development server and watch for CSS changes"""
+    config = load_config()
     
     # Resolve paths using shared utility
     input_css_path, output_css_path = resolve_css_paths(config, input_css, output_css)
