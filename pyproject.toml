@@ -1,6 +1,6 @@
 [project]
 name = "daisyft"
-version = "0.1.7"
+version = "0.1.8"
 description = "DaisyUI/Tailwind cli for FastHTML projects"
 readme = "README.md"
 authors = [

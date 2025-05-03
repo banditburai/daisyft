@@ -54,8 +54,7 @@ def handle_basic_options(answers: Dict[str, Any]) -> None:
             choices=theme_choices,
             default=theme_choices[default_choice]
         ).ask()
-        
-        # Update the theme
+                
         answers["theme"] = selected_theme
     else:
         answers["theme"] = "default"
@@ -168,12 +167,14 @@ def init(
                 
         binary_type = "DaisyUI-enhanced Tailwind CSS" if config.style == "daisy" else "Vanilla Tailwind CSS"
         
+        # List to store messages about skipped files
+        skipped_files = []
+        
         local_binary_path = get_bin_dir() / get_tailwind_binary_name()
         needs_download = force or not (config.binary_metadata and local_binary_path.exists())
         if not needs_download and hasattr(config, 'previous_style') and config.previous_style != config.style:
              needs_download = True # Force download if style changed
-        
-        # Progress for non-download tasks
+                
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -183,75 +184,68 @@ def init(
                 task = progress.add_task("Preparing binary setup...", total=None) # Indeterminate task
                 if not config_exists:
                     options = InitOptions()
-                    config.update_from_options(options)
-                # Don't download inside progress                
+                    config.update_from_options(options)                             
             else: # Regular init 
                 task = progress.add_task("Setting up project...", total=None) # Indeterminate task
                 
                 # Check if we need to update template files due to style change
                 style_changed = hasattr(config, 'previous_style') and config.previous_style != config.style
             
-                if not config_exists:
-                    # Create project structure
+                if not config_exists:                    
                     progress.update(task, description="Creating directories...")
                     for dir_path in config.paths.values():
                         safe_create_directories(project_path / dir_path)
 
                     # Generate template files
                     progress.update(task, description="Generating files...")                    
-                    render_template_safe(
-                        "input.css.jinja2",
-                        project_path / config.paths["css"] / "input.css",
-                        {"style": config.style}
-                    )
-                    render_template_safe(
-                        "main.py.jinja2",
-                        project_path / config.app_path,
-                        {
-                            "style": config.style,
-                            "theme": config.theme,
-                            "paths": config.paths,
-                            "port": config.port,
-                            "live": config.live,
-                            "host": config.host
-                        }
-                    )
-                
-                elif style_changed:
-                    # If style changed during reinitialization, update CSS input file
-                    progress.update(task, description="Updating CSS for new style...")
-                    render_template_safe(
-                        "input.css.jinja2",
-                        project_path / config.paths["css"] / "input.css",
-                        {"style": config.style}
-                    )
                     
-                    # No console prints inside progress                
+                    css_input_path = project_path / config.paths["css"] / "input.css"
+                    app_file_path = project_path / config.app_path
+                                        
+                    if not css_input_path.exists():
+                        render_template_safe(
+                            "input.css.jinja2",
+                            css_input_path,
+                            {"style": config.style}
+                        )
+                    else:
+                        skipped_files.append(f"Skipped creating existing file: {css_input_path.relative_to(project_path)}")
+                        
+                    if not app_file_path.exists():
+                        render_template_safe(
+                            "main.py.jinja2",
+                            app_file_path,
+                            {
+                                "style": config.style,
+                                "theme": config.theme,
+                                "paths": config.paths,
+                                "port": config.port,
+                                "live": config.live,
+                                "host": config.host
+                            }
+                        )
+                    else:
+                        skipped_files.append(f"Skipped creating existing file: {app_file_path.relative_to(project_path)}")
+                
                 progress.update(task, description="Finalizing setup...")
-        # --- End of Progress block ---
         
-        # Perform download *outside* the Progress context if needed
         download_performed = False
         if needs_download:
              console.print(f"Downloading {binary_type} binary...")
              try:
-                 # Explicitly show progress for the download itself now
                  download_tailwind_binary(config, force=force, show_progress=True)
                  download_performed = True
              except typer.Exit:
-                 # Let download_tailwind_binary handle its own exit messages
                  raise # Re-raise the exit exception
              except Exception as e:
-                 # Catch other potential download errors
                  console.print(f"[red]Unexpected error during download:[/red] {e}")
                  raise typer.Exit(1)
 
-        # Save config regardless of download, but especially if metadata was updated
-        # If download happened, metadata *was* updated by download_tailwind_binary
-        # If no download was needed, but config was created/updated, still save.
         save_config(config, config_path)
 
-        # --- Final messages ---
+        for msg in skipped_files:
+            console.print(f"[yellow]Note:[/yellow] {msg}")
+            
         if binaries:
             if download_performed:
                  console.print("\n[green bold]✓ Tailwind binaries installed successfully![/green bold]")
@@ -268,13 +262,16 @@ def init(
                  console.print("  daisyft dev      # Start development server (with live CSS watch)")
                  console.print("  daisyft build    # Build production CSS")
                  console.print("  daisyft run      # Builds CSS and Runs FastHTML app")
-            else:
-                 console.print("\n[bold]Project reinitialized with updated settings.[/bold]")
+            else: # Reinitialization messages
+                 console.print("\n[bold]Project configuration updated in .daisyft/daisyft.toml.[/bold]")
                  style_changed = hasattr(config, 'previous_style') and config.previous_style != config.style
                  if style_changed:
-                      console.print(f"\n[bold]Style changed from {config.previous_style} to {config.style}.[/bold]")
-                      console.print("  • CSS input file has been updated")                
-                      console.print("  • You may need to update your app file to use the new style settings")
+                      console.print(f"\n[yellow]Note:[/yellow] Style changed from '{config.previous_style}' to '{config.style}'.")
+                      css_input_path = project_path / config.paths["css"] / "input.css"
+                      console.print(f"  - Your existing '{css_input_path.relative_to(project_path)}' was [bold]not[/bold] modified.")
+                      console.print(f"  - You may need to manually update it to use the correct `@plugin` directive.")
+                      console.print(f"  - You may also need to update your app file ('{config.app_path}') if it uses style-specific features.")
+                      
                  if download_performed:
                      console.print("\n[bold]Tailwind binary was updated.[/bold]")
                  else:
